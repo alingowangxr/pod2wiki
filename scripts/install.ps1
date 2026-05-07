@@ -146,7 +146,7 @@ argument-hint: "[--mode rss|youtube|all] [--youtube-url URL] [--youtube-query QU
 Run pod2wiki from this workspace.
 
 __FENCE__bash
-python __INSTALL_DIR__/scripts/fetch_podcasts.py --config config/pod2wiki.config.yaml --env-file config/pod2wiki.env --output-dir output/pod2wiki --wiki-out "__WIKI_SOURCES__" --days 7 --write-insight-log $ARGUMENTS
+python -m pod2wiki.cli.fetch_podcasts --config config/pod2wiki.config.yaml --env-file config/pod2wiki.env --output-dir output/pod2wiki --wiki-out "__WIKI_SOURCES__" --days 7 --write-insight-log $ARGUMENTS
 __FENCE__
 
 Use `--no-llm` for a no-key smoke test. Use `--translate-full` when the user asks for full transcript translation.
@@ -173,7 +173,7 @@ if ($python) {
     $prevPref = $ErrorActionPreference
     $ErrorActionPreference = 'Continue'
     try {
-        & $python.Path @($python.PrefixArgs) (Join-Path $installRoot "scripts/fetch_podcasts.py") --config $configTarget --env-file $envTarget --wiki-out $wikiSources --days 1 --dry-run 2>&1 | ForEach-Object { Write-Host $_ }
+        & $python.Path @($python.PrefixArgs) -m pod2wiki.cli.fetch_podcasts --config $configTarget --env-file $envTarget --wiki-out $wikiSources --days 1 --dry-run 2>&1 | ForEach-Object { Write-Host $_ }
     }
     finally {
         $ErrorActionPreference = $prevPref

@@ -13,7 +13,7 @@ The one-click installer puts everything under the user's workspace:
 
 ```
 <workspace>/
-├── tools/pod2wiki/scripts/fetch_podcasts.py
+├── tools/pod2wiki/src/pod2wiki/     # Python package (collect / summarize / transcribe ...)
 ├── config/pod2wiki.config.yaml      # the one the user actually edits
 ├── config/pod2wiki.env              # contains LLM settings after the user fills the key
 ├── output/pod2wiki/                 # default local output if no wiki path
@@ -28,13 +28,13 @@ If the user invokes `/pod2wiki`, the slash command already has the right paths b
 2. Run a dry-run first to confirm config parses:
 
 ```bash
-python tools/pod2wiki/scripts/fetch_podcasts.py --config config/pod2wiki.config.yaml --env-file config/pod2wiki.env --days 1 --dry-run
+python -m pod2wiki.cli.fetch_podcasts --config config/pod2wiki.config.yaml --env-file config/pod2wiki.env --days 1 --dry-run
 ```
 
 3. Run the real scan with `--wiki-out` if the user has a wiki:
 
 ```bash
-python tools/pod2wiki/scripts/fetch_podcasts.py \
+python -m pod2wiki.cli.fetch_podcasts \
   --config config/pod2wiki.config.yaml \
   --env-file config/pod2wiki.env \
   --output-dir output/pod2wiki \
@@ -44,7 +44,7 @@ python tools/pod2wiki/scripts/fetch_podcasts.py \
 ```
 
 When an RSS feed only ships a short `<description>` (Latent Space, many Substack
-podcasts), fetch_podcasts will automatically download the MP3 enclosure and run
+podcasts), the collector will automatically download the MP3 enclosure and run
 faster-whisper (`tiny` model, first 600s by default) to recover the spoken
 content. Override with `--whisper-model {tiny,base,small,medium,large-v3}`,
 `--whisper-clip-seconds N` (use 0 for full episode), `--whisper-threshold N`
@@ -61,6 +61,28 @@ and emits a `[whisper] transcription unavailable` warning to stderr.
 - `translation_pages_written`
 - `insight_log`
 - `verification_warnings`
+
+## Architecture for developers
+
+If the user is a developer asking about the code structure:
+
+```
+src/pod2wiki/
+├── cli/fetch_podcasts.py      # Main orchestrator
+├── collect/                   # RSS / YouTube / local file collectors
+├── models.py                  # Pydantic schemas (SourceItem, StructuredSummary, Config)
+├── errors.py                  # Exception hierarchy
+├── persistence/file.py        # Markdown rendering + file I/O
+├── reporting/insight_log.py   # Insight log generation
+├── summarize/                 # LLM summarization + reversal detection
+├── transcribe/whisper.py      # Whisper transcription
+└── utils.py                   # Text/date/slug helpers
+```
+
+Key design principles:
+1. All pipeline data flows through Pydantic models (not dicts)
+2. Collect / Transcribe / Summarize / Render / Persist are separate modules
+3. The new CLI (`python -m pod2wiki.cli.fetch_podcasts`) replaces the legacy `scripts/fetch_podcasts.py`
 
 ## Reversal Narrative Verification Rule
 

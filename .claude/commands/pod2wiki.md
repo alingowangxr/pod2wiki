@@ -10,7 +10,7 @@ Use the installed pod2wiki tool to ingest podcasts, RSS/blog feeds, YouTube tran
 Default installed command shape (assumes pod2wiki cloned at `tools/pod2wiki/` of the host repo, with config/env at `config/pod2wiki.config.yaml` / `config/pod2wiki.env`):
 
 ```bash
-python tools/pod2wiki/scripts/fetch_podcasts.py \
+python -m pod2wiki.cli.fetch_podcasts \
   --config config/pod2wiki.config.yaml \
   --env-file config/pod2wiki.env \
   --output-dir output/pod2wiki \

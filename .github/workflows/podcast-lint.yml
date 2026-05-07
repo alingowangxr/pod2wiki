@@ -30,9 +30,9 @@ jobs:
         run: |
           python -c "import yaml; yaml.safe_load(open('examples/config.ai-investing.yaml', encoding='utf-8'))"
       - name: Smoke test dry-run
-        run: python scripts/fetch_podcasts.py --config examples/config.ai-investing.yaml --days 1 --dry-run
+        run: python -m pod2wiki.cli.fetch_podcasts --config examples/config.ai-investing.yaml --days 1 --dry-run
       - name: Smoke test local file no LLM
-        run: python scripts/fetch_podcasts.py --config examples/config.ai-investing.yaml --input-file examples/sample-transcript.md --no-llm --max-items 1 --write-insight-log
+        run: python -m pod2wiki.cli.fetch_podcasts --config examples/config.ai-investing.yaml --input-file examples/sample-transcript.md --no-llm --max-items 1 --write-insight-log
       - name: Install smoke test (Linux / install.sh)
         if: runner.os == 'Linux'
         shell: bash

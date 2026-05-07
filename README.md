@@ -34,6 +34,18 @@ pod2wiki 把高质量播客和长文 RSS 自动转成 `karpathy-claude-wiki` 兼
 
 Agent 会问你两个问题（wiki 路径、用哪家 LLM），然后自动跑一次 dry-run 验证，给你装好 slash command 和 skill。装完后在 Claude Code 里输入 `/pod2wiki` 或者「刷一下播客」就能跑。
 
+## 快速使用
+
+```bash
+# 验证配置（dry-run）
+python -m pod2wiki.cli.fetch_podcasts --config config/pod2wiki.config.yaml --days 1 --dry-run
+
+# 正式扫描本周内容
+python -m pod2wiki.cli.fetch_podcasts --config config/pod2wiki.config.yaml --days 7 --write-insight-log
+```
+
+> **面向开发者**：旧版 `scripts/fetch_podcasts.py` 仍然可用，但将在后续版本中移除。建议迁移到 `python -m pod2wiki.cli.fetch_podcasts`。
+
 ## 装完了，怎么改成"我自己的"关注领域？
 
 打开 `config/pod2wiki.config.yaml`，3 个地方决定你看到什么：
@@ -113,7 +125,7 @@ max_items_per_feed: 3
 max_videos_per_channel: 5
 ```
 
-`max_items_per_feed` 是“每个 RSS/blog 来源最多处理几条”，不是全局上限；`max_videos_per_channel` 是 YouTube 每个频道/搜索词先看的候选数量，设成 5 是为了给无字幕、重复或不相关视频留一点缓冲。如果你只想控制整次运行的总处理量，再在命令里加 `--max-items 20` 这类全局安全阀。
+`max_items_per_feed` 是"每个 RSS/blog 来源最多处理几条"，不是全局上限；`max_videos_per_channel` 是 YouTube 每个频道/搜索词先看的候选数量，设成 5 是为了给无字幕、重复或不相关视频留一点缓冲。如果你只想控制整次运行的总处理量，再在命令里加 `--max-items 20` 这类全局安全阀。
 
 > ⚠️ **YouTube 不适合批量历史回填**：YouTube 搜索、字幕接口和 `yt-dlp` 都可能很快触发限流。建议每次只处理少量视频（3-5 条左右）。如果你要整理一个频道的大量历史内容，优先使用播客 RSS；如果没有 RSS，就先把音频/转录保存成本地文件，再用 `--input-file` 导入。遇到 `429` / `TooManyRequests` / rate limit 时，停止本轮 YouTube 抓取，隔一段时间再继续。
 
@@ -156,6 +168,40 @@ output/pod2wiki/{theme}-insights-log.md     (本次扫描的主线整理)
 
 LLM 提供商在 `config/pod2wiki.env` 里切。**默认 DeepSeek V4 Flash**——英→中摘要性价比最高；要换 Kimi / GLM / Qwen / OpenAI，把对应段落取消注释即可（全部 OpenAI 兼容协议）。
 
+## 项目架构
+
+```
+src/pod2wiki/
+├── cli/fetch_podcasts.py      # 主入口（orchestrator）
+├── collect/                   # 数据收集（RSS / YouTube / 本地文件）
+│   ├── base.py
+│   ├── rss.py
+│   └── youtube.py
+├── models.py                  # Pydantic 数据模型（SourceItem, StructuredSummary, Config）
+├── errors.py                  # 异常体系
+├── persistence/
+│   └── file.py                # Markdown 渲染 + 文件持久化
+├── reporting/
+│   └── insight_log.py         # 洞察日志生成
+├── summarize/
+│   ├── service.py             # LLM 摘要服务
+│   └── reversal.py            # 反转叙事检测
+├── transcribe/
+│   └── whisper.py             # Whisper 语音转录
+├── utils.py                   # 通用工具函数
+└── proxy.py                   # 代理配置
+```
+
+## 测试
+
+```bash
+# 运行测试套件
+python -m pytest tests/ -v
+
+# 验证新 CLI 可用
+python -m pod2wiki.cli.fetch_podcasts --config examples/config.ai-investing.yaml --days 1 --dry-run
+```
+
 ## 不包含什么
 
 - 没有 GUI
@@ -182,6 +228,18 @@ Paste this to Claude Code, Codex, Cursor, or any agent that can read/write files
 > Install pod2wiki for me using this protocol: https://github.com/Benboerba620/pod2wiki/blob/main/INSTALL-FOR-AI.md
 
 The agent asks two questions (wiki path, LLM provider), runs a dry-run to verify, and wires up the slash command and skill. After install, type `/pod2wiki` or "scan podcasts" inside Claude Code to run it.
+
+## Quick Start
+
+```bash
+# Validate config (dry-run)
+python -m pod2wiki.cli.fetch_podcasts --config config/pod2wiki.config.yaml --days 1 --dry-run
+
+# Run the real scan
+python -m pod2wiki.cli.fetch_podcasts --config config/pod2wiki.config.yaml --days 7 --write-insight-log
+```
+
+> **For developers**: The legacy `scripts/fetch_podcasts.py` still works but will be removed in a future release. Migrate to `python -m pod2wiki.cli.fetch_podcasts`.
 
 ## How do I switch to my own topic?
 
@@ -304,6 +362,40 @@ output/pod2wiki/{theme}-insights-log.md          (this scan's narrative thread)
 > 💡 **About the Whisper trigger**: mp3 download + Whisper only fire when an RSS item's `<description>` is shorter than 1500 chars (default `whisper.auto_threshold`) **and** an audio enclosure exists. Substack-style feeds that ship full show notes (often tens of thousands of chars) **skip** Whisper and use the description directly — cheaper, more accurate, more context. Force Whisper with `--whisper-threshold 999999`, disable it entirely with `--no-whisper`.
 
 LLM provider is set in `config/pod2wiki.env`. **Default is DeepSeek V4 Flash** — best price/quality for EN→ZH podcast summarization. To switch to Kimi / GLM / Qwen / OpenAI, uncomment the matching block (all are OpenAI-compatible endpoints).
+
+## Architecture
+
+```
+src/pod2wiki/
+├── cli/fetch_podcasts.py      # Main entry point (orchestrator)
+├── collect/                   # Data collection (RSS / YouTube / local files)
+│   ├── base.py
+│   ├── rss.py
+│   └── youtube.py
+├── models.py                  # Pydantic data models (SourceItem, StructuredSummary, Config)
+├── errors.py                  # Exception hierarchy
+├── persistence/
+│   └── file.py                # Markdown rendering + file I/O
+├── reporting/
+│   └── insight_log.py         # Insight log generation
+├── summarize/
+│   ├── service.py             # LLM summarization service
+│   └── reversal.py            # Reversal narrative detection
+├── transcribe/
+│   └── whisper.py             # Whisper transcription service
+├── utils.py                   # Utility functions
+└── proxy.py                   # Proxy configuration
+```
+
+## Testing
+
+```bash
+# Run the test suite
+python -m pytest tests/ -v
+
+# Verify new CLI works
+python -m pod2wiki.cli.fetch_podcasts --config examples/config.ai-investing.yaml --days 1 --dry-run
+```
 
 ## What this is not
 

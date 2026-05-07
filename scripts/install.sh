@@ -110,7 +110,7 @@ argument-hint: "[--mode rss|youtube|all] [--youtube-url URL] [--youtube-query QU
 Run pod2wiki from this workspace.
 
 \`\`\`bash
-python $install_dir_name/scripts/fetch_podcasts.py --config config/pod2wiki.config.yaml --env-file config/pod2wiki.env --output-dir output/pod2wiki --wiki-out "$wiki_sources" --days 7 --write-insight-log \$ARGUMENTS
+python -m pod2wiki.cli.fetch_podcasts --config config/pod2wiki.config.yaml --env-file config/pod2wiki.env --output-dir output/pod2wiki --wiki-out "$wiki_sources" --days 7 --write-insight-log \$ARGUMENTS
 \`\`\`
 
 Use \`--no-llm\` for a no-key smoke test. Use \`--translate-full\` when the user asks for full transcript translation.
@@ -122,7 +122,7 @@ if [[ "$skip_pip" != "1" ]]; then
   python -m pip install -r "$install_root/requirements.txt"
 fi
 
-python "$install_root/scripts/fetch_podcasts.py" --config "$config_target" --env-file "$env_target" --wiki-out "$wiki_sources" --days 1 --dry-run
+python -m pod2wiki.cli.fetch_podcasts --config "$config_target" --env-file "$env_target" --wiki-out "$wiki_sources" --days 1 --dry-run
 
 echo "[pod2wiki] Installed."
 echo "Config: $config_target"
