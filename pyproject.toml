@@ -23,8 +23,8 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/Benboerba620/pod2wiki"
-Issues = "https://github.com/Benboerba620/pod2wiki/issues"
+Homepage = "https://github.com/alingowangxr/pod2wiki"
+Issues = "https://github.com/alingowangxr/pod2wiki/issues"
 
 [tool.ruff]
 line-length = 100

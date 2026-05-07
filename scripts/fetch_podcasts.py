@@ -29,7 +29,7 @@ from proxy_config import PROXY, requests_proxy
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "output"
-UA = "pod2wiki/0.1 (+https://github.com/Benboerba620/pod2wiki)"
+UA = "pod2wiki/0.1 (+https://github.com/alingowangxr/pod2wiki)"
 YOUTUBE_WATCH = "https://www.youtube.com/watch?v="
 YOUTUBE_RECOMMENDED_MAX_RESULTS = 5
 YOUTUBE_RECOMMENDED_TOTAL_CANDIDATES = 20

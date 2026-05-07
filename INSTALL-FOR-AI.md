@@ -15,7 +15,7 @@ Both required. If missing, tell the user to install Python 3.11+ and git.
 ## Phase 2. Clone The Repo
 
 ```bash
-git clone https://github.com/Benboerba620/pod2wiki.git
+git clone https://github.com/alingowangxr/pod2wiki.git
 cd pod2wiki
 ```
 

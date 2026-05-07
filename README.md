@@ -1,13 +1,13 @@
 [中文](#中文) | [English](#english)
 
-[![Latest Release](https://img.shields.io/github/v/release/Benboerba620/pod2wiki?display_name=tag)](https://github.com/Benboerba620/pod2wiki/releases/latest)
-[![Podcast Lint](https://github.com/Benboerba620/pod2wiki/actions/workflows/podcast-lint.yml/badge.svg)](https://github.com/Benboerba620/pod2wiki/actions/workflows/podcast-lint.yml)
+[![Latest Release](https://img.shields.io/github/v/release/alingowangxr/pod2wiki?display_name=tag)](https://github.com/alingowangxr/pod2wiki/releases/latest)
+[![Podcast Lint](https://github.com/alingowangxr/pod2wiki/actions/workflows/podcast-lint.yml/badge.svg)](https://github.com/alingowangxr/pod2wiki/actions/workflows/podcast-lint.yml)
 
 > 🎙️ **30 秒看懂 / In 30 seconds**：把高质量播客（YouTube/RSS）和长文 RSS 自动转成中文摘要 + 英文原文存档，写进你的个人 LLM 知识库。Whisper 转录 + DeepSeek 翻译，一键 AI 安装。
 > Turn high-signal podcasts and long-form RSS into Chinese summaries plus archived English transcripts, written into your personal LLM wiki. Whisper + DeepSeek, one-line AI install.
 
 > 🔗 **零代码 AI 投研三件套** ｜ Zero-code AI investment research toolkit
-> **🎙️ pod2wiki 输入** · 🧠 [karpathy-claude-wiki](https://github.com/Benboerba620/karpathy-claude-wiki) 底座 · 📊 [daily-watchlist](https://github.com/Benboerba620/daily-watchlist) 日常 + 内置假设追踪
+> **🎙️ pod2wiki 输入** · 🧠 [karpathy-claude-wiki](https://github.com/alingowangxr/karpathy-claude-wiki) 底座 · 📊 [daily-watchlist](https://github.com/alingowangxr/daily-watchlist) 日常 + 内置假设追踪
 
 ```mermaid
 flowchart LR
@@ -30,7 +30,7 @@ pod2wiki 把高质量播客和长文 RSS 自动转成 `karpathy-claude-wiki` 兼
 
 复制下面这句话给 Claude Code、Codex、Cursor 或任何能读写文件的 AI agent：
 
-> 帮我按这个协议安装 pod2wiki：https://github.com/Benboerba620/pod2wiki/blob/main/INSTALL-FOR-AI.md
+> 帮我按这个协议安装 pod2wiki：https://github.com/alingowangxr/pod2wiki/blob/main/INSTALL-FOR-AI.md
 
 Agent 会问你两个问题（wiki 路径、用哪家 LLM），然后自动跑一次 dry-run 验证，给你装好 slash command 和 skill。装完后在 Claude Code 里输入 `/pod2wiki` 或者「刷一下播客」就能跑。
 
@@ -225,7 +225,7 @@ pod2wiki turns high-signal podcasts and long-form RSS feeds into `source-summary
 
 Paste this to Claude Code, Codex, Cursor, or any agent that can read/write files:
 
-> Install pod2wiki for me using this protocol: https://github.com/Benboerba620/pod2wiki/blob/main/INSTALL-FOR-AI.md
+> Install pod2wiki for me using this protocol: https://github.com/alingowangxr/pod2wiki/blob/main/INSTALL-FOR-AI.md
 
 The agent asks two questions (wiki path, LLM provider), runs a dry-run to verify, and wires up the slash command and skill. After install, type `/pod2wiki` or "scan podcasts" inside Claude Code to run it.
 

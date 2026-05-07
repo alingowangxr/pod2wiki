@@ -17,7 +17,7 @@ from pod2wiki.models import Config, RSSItem, SourceItem
 from pod2wiki.proxy import requests_proxy
 from pod2wiki.utils import parse_date, strip_html
 
-UA = "pod2wiki/0.1 (+https://github.com/Benboerba620/pod2wiki)"
+UA = "pod2wiki/0.1 (+https://github.com/alingowangxr/pod2wiki)"
 
 
 def _eprint(message: str) -> None:

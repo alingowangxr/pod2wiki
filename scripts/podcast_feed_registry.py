@@ -9,7 +9,7 @@ import xml.etree.ElementTree as ET
 import requests
 
 
-UA = "pod2wiki/0.1 (+https://github.com/Benboerba620/pod2wiki)"
+UA = "pod2wiki/0.1 (+https://github.com/alingowangxr/pod2wiki)"
 TIMEOUT = 20
 
 CHANNELS = [
