@@ -1,76 +1,147 @@
 {% extends "base.html" %}
 
 {% block content %}
-<section>
-    <h2>Dashboard</h2>
-    <div class="grid">
-        {% include "partials/active_run_card.html" %}
-
-        {% if last_run %}
-        <article>
-            <header>Last Run Summary</header>
-            <p>ID: <code>{{ last_run.id }}</code></p>
-            <p>Status: <span class="status-{{ last_run.status }}">{{ last_run.status }}</span></p>
-            <p>S/F/Sk/W: 
-                {{ last_run.total_items - last_run.failed_items - last_run.skipped_items }}/
-                {{ last_run.failed_items }}/
-                {{ last_run.skipped_items }}/
-                {{ last_run.warning_count }}
-            </p>
-            <footer><a href="/runs/{{ last_run.id }}">Details</a></footer>
-        </article>
-        
-        <article>
-            <header>Active Output Locations</header>
-            <ul style="font-size: 0.8rem;">
-                <li>Wiki Root: <code>{{ last_run.command_args.get('wiki_out', 'wiki') }}</code></li>
-                <li>Logs: <code>{{ last_run.command_args.get('output_dir', 'output') }}</code></li>
-                <li>Items: <code>{{ last_run.total_items }} total</code></li>
-            </ul>
-            <footer>Config: {{ last_run.command_args.get('config', 'default') }}</footer>
-        </article>
-        {% endif %}
+<section class="page-header">
+    <div>
+        <div class="eyebrow">Operations</div>
+        <h2>Dashboard</h2>
+        <p class="page-meta">A quick view of active processing, the latest completed run, and recent warnings.</p>
     </div>
-    
-    <div class="grid">
-        <article>
-            <header>Recent Warnings</header>
-            {% if recent_warnings %}
-            <ul style="font-size: 0.8rem;">
-                {% for w in recent_warnings %}
-                <li><strong>{{ w.item_id[:15] }}</strong>: {{ w.message[:40] }}...</li>
-                {% endfor %}
-            </ul>
-            {% else %}
-            <p>No recent warnings.</p>
-            {% endif %}
-            <footer><a href="/runs">View history</a></footer>
-        </article>
+    <div class="quick-actions">
+        <a href="/scan" role="button">Start New Scan</a>
+        <a href="/runs" role="button" class="secondary">Browse Runs</a>
     </div>
 </section>
 
-<section>
-    <h3>Execution History</h3>
+<section class="surface-grid">
+    <div class="span-7">
+        {% include "partials/active_run_card.html" %}
+    </div>
+
+    {% if last_run %}
+    {% set success_count = last_run.total_items - last_run.failed_items - last_run.skipped_items %}
+    <div class="span-5">
+        <article class="surface">
+            <div class="surface-header">
+                <div>
+                    <div class="eyebrow">Latest Result</div>
+                    <h3>Last Run Summary</h3>
+                </div>
+                <span class="badge status-{{ last_run.status }}">{{ last_run.status }}</span>
+            </div>
+            <div class="metric-row">
+                <div class="metric-card">
+                    <span class="metric-label">Successful</span>
+                    <div class="metric-value">{{ success_count }}</div>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-label">Warnings</span>
+                    <div class="metric-value">{{ last_run.warning_count }}</div>
+                </div>
+            </div>
+            <div class="info-list" style="margin-top: 1rem;">
+                <div class="info-item">
+                    <div>
+                        <div class="info-item-label">Run ID</div>
+                        <code>{{ last_run.id }}</code>
+                    </div>
+                    <a href="/runs/{{ last_run.id }}">Details</a>
+                </div>
+                <div class="info-item">
+                    <div class="info-item-label">Started</div>
+                    <div>{{ last_run.start_time[:19].replace('T', ' ') }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-item-label">Failed / Skipped</div>
+                    <div>{{ last_run.failed_items }} / {{ last_run.skipped_items }}</div>
+                </div>
+            </div>
+        </article>
+    </div>
+    {% endif %}
+</section>
+
+{% if last_run %}
+<section class="surface-grid">
+    <div class="span-7">
+        <article class="surface">
+            <div class="surface-header">
+                <div>
+                    <div class="eyebrow">Output Targets</div>
+                    <h3>Active Paths</h3>
+                </div>
+                <span class="badge status-pending">Config Snapshot</span>
+            </div>
+            <div class="metric-row">
+                <div class="metric-card">
+                    <span class="metric-label">Wiki Root</span>
+                    <div class="metric-note"><code>{{ last_run.command_args.get('wiki_out', 'wiki') }}</code></div>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-label">Logs / Output</span>
+                    <div class="metric-note"><code>{{ last_run.command_args.get('output_dir', 'output') }}</code></div>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-label">Config Path</span>
+                    <div class="metric-note"><code>{{ last_run.command_args.get('config', 'default') }}</code></div>
+                </div>
+            </div>
+        </article>
+    </div>
+    <div class="span-5">
+        <article class="surface subtle">
+            <div class="surface-header">
+                <div>
+                    <div class="eyebrow">Warnings</div>
+                    <h3>Recent Warnings</h3>
+                </div>
+                <a href="/runs">View history</a>
+            </div>
+            {% if recent_warnings %}
+            <ul class="warning-list">
+                {% for w in recent_warnings %}
+                <li class="warning-item">
+                    <strong>{{ w.item_id[:18] }}</strong><br>
+                    <span class="muted">{{ w.message[:80] }}{% if w.message|length > 80 %}...{% endif %}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="lede">No recent warnings were recorded for the latest run.</p>
+            {% endif %}
+        </article>
+    </div>
+</section>
+{% endif %}
+
+<section class="table-shell">
+    <div class="table-toolbar">
+        <div>
+            <h3 class="section-title">Execution History</h3>
+            <div class="muted">Recent runs with status, timing, and outcome mix.</div>
+        </div>
+        <a href="/runs" role="button" class="secondary">Open Full History</a>
+    </div>
     <table>
         <thead>
             <tr>
                 <th>Run ID</th>
                 <th>Started</th>
                 <th>Status</th>
-                <th>S/F/Sk/W</th>
+                <th>Results</th>
             </tr>
         </thead>
         <tbody>
             {% for run in recent_runs %}
             <tr>
-                <td><a href="/runs/{{ run.id }}">{{ run.id }}</a></td>
-                <td>{{ run.start_time[:19] }}</td>
-                <td class="status-{{ run.status }}">{{ run.status }}</td>
+                <td><a href="/runs/{{ run.id }}"><code>{{ run.id }}</code></a></td>
+                <td>{{ run.start_time[:19].replace('T', ' ') }}</td>
+                <td><span class="badge status-{{ run.status }}">{{ run.status }}</span></td>
                 <td>
-                    {{ run.total_items - run.failed_items - run.skipped_items }}/
-                    {{ run.failed_items }}/
-                    {{ run.skipped_items }}/
-                    {{ run.warning_count }}
+                    {{ run.total_items - run.failed_items - run.skipped_items }} success /
+                    {{ run.failed_items }} failed /
+                    {{ run.skipped_items }} skipped /
+                    {{ run.warning_count }} warnings
                 </td>
             </tr>
             {% endfor %}

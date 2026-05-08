@@ -1,16 +1,36 @@
 {% extends "base.html" %}
 
 {% block content %}
-<header>
-    <h2>Run Details: {{ run_id }}</h2>
-    <div hx-get="/api/runs/{{ run_id }}/status" hx-trigger="every 5s" hx-swap="outerHTML">
-        <!-- Status fragment will be loaded here -->
-        Loading status...
+<section class="page-header">
+    <div>
+        <div class="eyebrow">Run Details</div>
+        <h2>Run Details: {{ run_id }}</h2>
+        <p class="page-meta">Trace processed items, runtime status, warnings, and event chronology for this run.</p>
     </div>
-</header>
+    <div class="quick-actions">
+        <a href="/runs" role="button" class="secondary">Back to Runs</a>
+    </div>
+</section>
 
-<section>
-    <h3>Processed Items</h3>
+<div hx-get="/api/runs/{{ run_id }}/status" hx-trigger="every 5s" hx-swap="outerHTML">
+    <article class="surface subtle">
+        <div class="surface-header">
+            <div>
+                <div class="eyebrow">Status</div>
+                <h3>Loading Status</h3>
+            </div>
+        </div>
+        <p class="lede">Fetching current run progress...</p>
+    </article>
+</div>
+
+<section class="table-shell">
+    <div class="table-toolbar">
+        <div>
+            <h3 class="section-title">Processed Items</h3>
+            <div class="muted">{{ items|length }} items recorded for this run.</div>
+        </div>
+    </div>
     <table>
         <thead>
             <tr>
@@ -25,7 +45,7 @@
             <tr>
                 <td>{{ item.title }}</td>
                 <td>{{ item.channel }}</td>
-                <td>{{ item.stage }}</td>
+                <td><span class="badge status-{{ item.stage }}">{{ item.stage }}</span></td>
                 <td>{{ item.error_msg or "" }}</td>
             </tr>
             {% endfor %}
@@ -33,21 +53,31 @@
     </table>
 </section>
 
-<section>
-    <h3>Warnings</h3>
+<section class="surface">
+    <div class="surface-header">
+        <div>
+            <div class="eyebrow">Warnings</div>
+            <h3>Warnings</h3>
+        </div>
+    </div>
     {% if warnings %}
-    <ul>
+    <ul class="warning-list">
         {% for w in warnings %}
-        <li><strong>{{ w.type }}</strong>: {{ w.message }}</li>
+        <li class="warning-item"><strong>{{ w.type }}</strong><br><span class="muted">{{ w.message }}</span></li>
         {% endfor %}
     </ul>
     {% else %}
-    <p>No warnings recorded for this run.</p>
+    <div class="empty-state">No warnings recorded for this run.</div>
     {% endif %}
 </section>
 
-<section>
-    <h3>Event Timeline</h3>
+<section class="table-shell">
+    <div class="table-toolbar">
+        <div>
+            <h3 class="section-title">Event Timeline</h3>
+            <div class="muted">{{ events|length }} events captured.</div>
+        </div>
+    </div>
     <table class="striped">
         <thead>
             <tr>
@@ -61,7 +91,7 @@
             <tr>
                 <td>{{ ev.timestamp }}</td>
                 <td>{{ ev.item_id }}</td>
-                <td>{{ ev.stage }}</td>
+                <td><span class="badge status-{{ ev.stage }}">{{ ev.stage }}</span></td>
             </tr>
             {% endfor %}
         </tbody>

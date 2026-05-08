@@ -220,6 +220,13 @@ class RunStateManager:
             row = cursor.fetchone()
             return dict(row) if row else {"status": "pending", "notes": ""}
 
+    def list_item_reviews(self) -> List[Dict[str, Any]]:
+        """List all persisted item review records."""
+        with sqlite3.connect(self.db_path) as conn:
+            conn.row_factory = sqlite3.Row
+            cursor = conn.execute("SELECT * FROM run_item_reviews ORDER BY updated_at DESC")
+            return [dict(row) for row in cursor.fetchall()]
+
     def get_active_run(self) -> Optional[Dict[str, Any]]:
         """Fetch the current running run if any."""
         with sqlite3.connect(self.db_path) as conn:

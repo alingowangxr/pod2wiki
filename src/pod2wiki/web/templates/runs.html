@@ -1,49 +1,103 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Execution History</h2>
-<table class="striped">
-    <thead>
-        <tr>
-            <th></th>
-            <th>Run ID</th>
-            <th>Started</th>
-            <th>Duration</th>
-            <th>Status</th>
-            <th>S/F/Sk/W</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for run in runs %}
-        <tr id="run-row-{{ run.id }}">
-            <td>
-                <button class="outline" style="padding: 0.1rem 0.4rem; margin: 0;"
-                        hx-get="/api/runs/{{ run.id }}/items" 
-                        hx-target="#details-{{ run.id }}"
-                        onclick="this.closest('tr').nextElementSibling.hidden = !this.closest('tr').nextElementSibling.hidden">
-                    +
-                </button>
-            </td>
-            <td><a href="/runs/{{ run.id }}"><code>{{ run.id }}</code></a></td>
-            <td>{{ run.start_time[:19].replace('T', ' ') }}</td>
-            <td>{{ run.duration_sec or 0 }}s</td>
-            <td class="status-{{ run.status }}">{{ run.status }}</td>
-            <td>
-                <span data-tooltip="Success">{{ run.total_items - run.failed_items - run.skipped_items }}</span>/
-                <span data-tooltip="Failed" style="color: red;">{{ run.failed_items }}</span>/
-                <span data-tooltip="Skipped" style="color: grey;">{{ run.skipped_items }}</span>/
-                <span data-tooltip="Warnings" style="color: orange;">{{ run.warning_count }}</span>
-            </td>
-        </tr>
-        <tr id="details-row-{{ run.id }}" hidden>
-            <td colspan="6">
-                <div id="details-{{ run.id }}" style="padding: 1rem; background: #fafafa; border-radius: 8px;">
-                    Loading items...
-                </div>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-<small>S/F/Sk/W: Success / Failed / Skipped / Warnings. Click [+] to expand item details.</small>
+<section class="page-header">
+    <div>
+        <div class="eyebrow">History</div>
+        <h2>Execution Runs</h2>
+        <p class="page-meta">Inspect recent background jobs, expand item lists inline, and jump into detailed traces when needed.</p>
+    </div>
+    <div class="quick-actions">
+        <a href="/scan" role="button">New Scan</a>
+        <span class="badge status-pending">{{ runs|length }} recent runs</span>
+    </div>
+</section>
+
+<section class="table-shell">
+    <div class="table-toolbar">
+        <div>
+            <h3 class="section-title">Run History</h3>
+            <div class="muted">Expand a row to fetch processed item details without leaving the page.</div>
+        </div>
+        <div class="cluster muted">S/F/Sk/W = Success / Failed / Skipped / Warnings</div>
+    </div>
+    <div class="table-toolbar">
+        <form method="get" action="/runs" class="filter-bar" style="width: 100%;">
+            <label class="filter-field" for="runs-q">
+                Search
+                <input type="text" id="runs-q" name="q" value="{{ filters.q }}" placeholder="Run ID, provider, model, wiki path">
+            </label>
+            <label class="filter-field" for="runs-status">
+                Status
+                <select id="runs-status" name="status_filter">
+                    <option value="" {% if not filters.status_filter %}selected{% endif %}>All statuses</option>
+                    <option value="running" {% if filters.status_filter == 'running' %}selected{% endif %}>Running</option>
+                    <option value="completed" {% if filters.status_filter == 'completed' %}selected{% endif %}>Completed</option>
+                    <option value="failed" {% if filters.status_filter == 'failed' %}selected{% endif %}>Failed</option>
+                </select>
+            </label>
+            <label class="filter-field" for="runs-limit">
+                Limit
+                <select id="runs-limit" name="limit">
+                    <option value="10" {% if filters.limit == 10 %}selected{% endif %}>10</option>
+                    <option value="20" {% if filters.limit == 20 %}selected{% endif %}>20</option>
+                    <option value="50" {% if filters.limit == 50 %}selected{% endif %}>50</option>
+                </select>
+            </label>
+            <div class="quick-actions">
+                <button type="submit">Apply Filters</button>
+                <a href="/runs" role="button" class="secondary">Reset</a>
+            </div>
+        </form>
+    </div>
+    {% if runs %}
+    <table class="striped">
+        <thead>
+            <tr>
+                <th></th>
+                <th>Run ID</th>
+                <th>Started</th>
+                <th>Duration</th>
+                <th>Status</th>
+                <th>Results</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for run in runs %}
+            <tr id="run-row-{{ run.id }}">
+                <td>
+                    <button class="outline expand-button"
+                            hx-get="/api/runs/{{ run.id }}/items"
+                            hx-target="#details-{{ run.id }}"
+                            onclick="this.closest('tr').nextElementSibling.hidden = !this.closest('tr').nextElementSibling.hidden; this.textContent = this.closest('tr').nextElementSibling.hidden ? '+' : '−';">
+                        +
+                    </button>
+                </td>
+                <td><a href="/runs/{{ run.id }}"><code>{{ run.id }}</code></a></td>
+                <td>{{ run.start_time[:19].replace('T', ' ') }}</td>
+                <td>{{ run.duration_sec or 0 }}s</td>
+                <td><span class="badge status-{{ run.status }}">{{ run.status }}</span></td>
+                <td>
+                    {{ run.total_items - run.failed_items - run.skipped_items }}/
+                    {{ run.failed_items }}/
+                    {{ run.skipped_items }}/
+                    {{ run.warning_count }}
+                </td>
+            </tr>
+            <tr id="details-row-{{ run.id }}" hidden>
+                <td colspan="6">
+                    <div id="details-{{ run.id }}" class="details-panel">
+                        Loading items...
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="table-toolbar">
+        <div class="empty-state">No runs match the current filters.</div>
+    </div>
+    {% endif %}
+</section>
 {% endblock %}

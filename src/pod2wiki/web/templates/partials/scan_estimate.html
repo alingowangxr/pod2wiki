@@ -1,35 +1,44 @@
 <div id="estimate-result">
-    <article>
-        <header>Pre-run Workload & Cost Estimate</header>
-        <div class="grid">
+    <article class="surface">
+        <div class="surface-header">
             <div>
-                <strong>Potential Items:</strong> {{ report.counts.max_potential_items }}
+                <div class="eyebrow">Estimate</div>
+                <h3>Pre-run Workload & Cost Estimate</h3>
             </div>
-            <div>
-                <strong>LLM Calls:</strong> {{ report.counts.total_llm_requests }}
+            <span class="badge status-pending">{{ report.config_summary.provider }}</span>
+        </div>
+        <div class="metric-row">
+            <div class="metric-card">
+                <span class="metric-label">Potential Items</span>
+                <div class="metric-value">{{ report.counts.max_potential_items }}</div>
             </div>
-            <div>
-                <strong>Est. Whisper:</strong> {{ report.counts.estimated_transcriptions }}
+            <div class="metric-card">
+                <span class="metric-label">LLM Calls</span>
+                <div class="metric-value">{{ report.counts.total_llm_requests }}</div>
+            </div>
+            <div class="metric-card">
+                <span class="metric-label">Est. Whisper</span>
+                <div class="metric-value">{{ report.counts.estimated_transcriptions }}</div>
             </div>
         </div>
-        
+
         {% if report.risks %}
         <div style="margin-top: 1rem;">
-            <strong>Risks Found:</strong>
+            <strong>Risks Found</strong>
             <ul>
                 {% for risk in report.risks %}
-                <li style="color: {{ 'red' if risk.level == 'high' else 'orange' }}; font-size: 0.9rem;">
+                <li style="color: {{ 'var(--danger)' if risk.level == 'high' else 'var(--warning)' }}; font-size: 0.9rem;">
                     {{ risk.message }}
                 </li>
                 {% endfor %}
             </ul>
         </div>
         {% else %}
-        <p style="color: green; font-size: 0.9rem; margin-top: 1rem;">Low risk detected for this configuration.</p>
+        <p style="color: var(--success); font-size: 0.9rem; margin-top: 1rem;">Low risk detected for this configuration.</p>
         {% endif %}
-        
-        <footer>
-            <small>Config: {{ report.config_summary.provider }} / {{ report.config_summary.model }}</small>
-        </footer>
+
+        <div class="metric-note" style="margin-top: 1rem;">
+            Config: {{ report.config_summary.provider }} / {{ report.config_summary.model }}
+        </div>
     </article>
 </div>

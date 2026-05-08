@@ -3,32 +3,49 @@
 {% block title %}Login - pod2wiki{% endblock %}
 
 {% block content %}
-<article style="max-width: 400px; margin: 2rem auto;">
-    <header>
-        <h3>Login</h3>
-    </header>
-    {% if error %}
-        <p style="color: red;">{{ error }}</p>
-    {% endif %}
-    <form action="/login" method="post">
-        <label for="username">
-            Username
-            <input type="text" name="username" id="username" required>
-        </label>
-        <label for="password">
-            Password
-            <input type="password" name="password" id="password" required>
-        </label>
-        <button type="submit">Sign In</button>
-    </form>
-</article>
+<section class="auth-shell">
+    <article class="surface">
+        <div class="surface-header">
+            <div>
+                <div class="eyebrow">Access</div>
+                <h3>Login</h3>
+            </div>
+            {% if not has_users %}
+            <span class="badge status-running">Setup</span>
+            {% endif %}
+        </div>
+        <p class="page-meta">Sign in to the local console to manage scans, sources, previews, and settings.</p>
+        {% if error %}
+        <div class="warning-item" style="margin-bottom: 1rem; border-color: rgba(180, 61, 47, 0.18); background: rgba(180, 61, 47, 0.08);">
+            <strong class="status-failed">Login failed</strong><br>
+            <span class="muted">{{ error }}</span>
+        </div>
+        {% endif %}
+        <form action="/login" method="post">
+            <label for="username">
+                Username
+                <input type="text" name="username" id="username" required>
+            </label>
+            <label for="password">
+                Password
+                <input type="password" name="password" id="password" required>
+            </label>
+            <div class="quick-actions">
+                <button type="submit">Sign In</button>
+            </div>
+        </form>
+    </article>
 
-{% if not has_users %}
-<article style="max-width: 400px; margin: 2rem auto; border-color: orange;">
-    <header style="background: orange; color: white;">
-        <strong>First Time Setup</strong>
-    </header>
-    <p>No users detected. Use the form above to create the first <strong>Admin</strong> account.</p>
-</article>
-{% endif %}
+    {% if not has_users %}
+    <article class="surface subtle" style="margin-top: 1rem;">
+        <div class="surface-header">
+            <div>
+                <div class="eyebrow">Bootstrap</div>
+                <h3>First Time Setup</h3>
+            </div>
+        </div>
+        <p class="lede">No users detected. Use the form above to create the first <strong>Admin</strong> account.</p>
+    </article>
+    {% endif %}
+</section>
 {% endblock %}

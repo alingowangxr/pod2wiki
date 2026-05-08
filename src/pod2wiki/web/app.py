@@ -138,7 +138,13 @@ async def active_run_fragment(request: Request, user: dict = Depends(auth_user))
 
 
 @app.get("/runs", response_class=HTMLResponse)
-async def list_runs(request: Request, user: dict = Depends(auth_user), limit: int = 20):
+async def list_runs(
+    request: Request,
+    user: dict = Depends(auth_user),
+    limit: int = 20,
+    q: str = "",
+    status_filter: str = "",
+):
     if not user: return RedirectResponse(url="/login", status_code=303)
     state_mgr = get_state_mgr()
     runs = state_mgr.get_recent_runs(limit=limit)
@@ -148,8 +154,27 @@ async def list_runs(request: Request, user: dict = Depends(auth_user), limit: in
                 r["command_args"] = json.loads(r["command_args"])
             except json.JSONDecodeError:
                 r["command_args"] = {}
+    query = q.strip().lower()
+    selected_status = status_filter.strip().lower()
+    if query:
+        runs = [
+            r for r in runs
+            if query in r["id"].lower()
+            or query in str(r.get("provider", "")).lower()
+            or query in str(r.get("model", "")).lower()
+            or query in str(r.get("command_args", {}).get("wiki_out", "")).lower()
+            or query in str(r.get("command_args", {}).get("output_dir", "")).lower()
+        ]
+    if selected_status:
+        runs = [r for r in runs if str(r.get("status", "")).lower() == selected_status]
     return templates.TemplateResponse(
-        request=request, name="runs.html", context={"user": user, "runs": runs}
+        request=request,
+        name="runs.html",
+        context={
+            "user": user,
+            "runs": runs,
+            "filters": {"q": q, "status_filter": status_filter, "limit": limit},
+        },
     )
 
 
@@ -333,23 +358,61 @@ async def update_settings(
 
 
 @app.get("/preview", response_class=HTMLResponse)
-async def preview_list(request: Request, user: dict = Depends(auth_user)):
+async def preview_list(
+    request: Request,
+    user: dict = Depends(auth_user),
+    q: str = "",
+    review_status: str = "",
+):
     if not user: return RedirectResponse(url="/login", status_code=303)
     output_dir = Path(os.environ.get("POD2WIKI_OUTPUT", "output"))
+    state_mgr = get_state_mgr()
     
     def get_files(subdir):
         d = output_dir / subdir
         if not d.exists(): return []
         return sorted(list(d.glob("*.md")), key=os.path.getmtime, reverse=True)[:20]
 
+    query = q.strip().lower()
+    selected_review_status = review_status.strip().lower()
+    review_map = {row["item_id"]: row for row in state_mgr.list_item_reviews()}
+
+    sources = get_files("sources")
+    raw = get_files("raw/podcasts")
+    if query:
+        sources = [path for path in sources if query in path.name.lower()]
+        raw = [path for path in raw if query in path.name.lower()]
+    all_translation_entries = []
+    for file_path in get_files("translations"):
+        review = review_map.get(file_path.name, {"status": "pending", "notes": ""})
+        all_translation_entries.append({"file": file_path, "review": review})
+    translation_entries = all_translation_entries
+    if query:
+        translation_entries = [entry for entry in translation_entries if query in entry["file"].name.lower()]
+    if selected_review_status:
+        translation_entries = [
+            entry for entry in translation_entries
+            if str(entry["review"].get("status", "pending")).lower() == selected_review_status
+        ]
+    review_counts = {
+        "pending": len([entry for entry in all_translation_entries if entry["review"].get("status", "pending") == "pending"]),
+        "accepted": len([entry for entry in all_translation_entries if entry["review"].get("status") == "accepted"]),
+        "rejected": len([entry for entry in all_translation_entries if entry["review"].get("status") == "rejected"]),
+    }
+    pending_review_entries = [entry for entry in all_translation_entries if entry["review"].get("status", "pending") == "pending"][:8]
+
     return templates.TemplateResponse(
         request=request, 
         name="preview_list.html", 
         context={
             "user": user,
-            "sources": get_files("sources"),
-            "raw": get_files("raw/podcasts"),
-            "translations": get_files("translations"),
+            "sources": sources,
+            "raw": raw,
+            "translations": [entry["file"] for entry in translation_entries],
+            "translation_entries": translation_entries,
+            "pending_review_entries": pending_review_entries,
+            "review_counts": review_counts,
+            "filters": {"q": q, "review_status": review_status},
             "insight_log": output_dir / "ai-insights-log.md" if (output_dir / "ai-insights-log.md").exists() else None
         }
     )

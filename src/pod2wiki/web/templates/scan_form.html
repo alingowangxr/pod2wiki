@@ -1,86 +1,156 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Start New Scan</h2>
-
-{% if presets %}
-<section>
-    <label for="preset-loader">Load Saved Preset</label>
-    <select id="preset-loader" onchange="loadPreset(this.value)">
-        <option value="">-- Choose a Preset --</option>
-        {% for pname, pval in presets.items() %}
-        <option value='{{ pval|tojson }}'>{{ pname }}</option>
-        {% endfor %}
-    </select>
+<section class="page-header">
+    <div>
+        <div class="eyebrow">Scan Builder</div>
+        <h2>Start New Scan</h2>
+        <p class="page-meta">Configure a run, review the estimated workload, and queue processing in the background.</p>
+    </div>
+    <div class="quick-actions">
+        {% if presets %}
+        <span class="badge status-pending">{{ presets|length }} saved presets</span>
+        {% endif %}
+        <a href="/runs" role="button" class="secondary">View Recent Runs</a>
+    </div>
 </section>
-{% endif %}
 
-<form action="/scan" method="post" id="scan-form" 
-      hx-post="/api/scan/estimate" hx-trigger="change delay:500ms, load" hx-target="#estimate-result">
-    <div class="grid">
-        <label for="mode">
-            Mode
-            <select name="mode" id="mode">
-                <option value="all">All (RSS + YouTube)</option>
-                <option value="rss">RSS Only</option>
-                <option value="youtube">YouTube Only</option>
-                <option value="file">Local File Only</option>
-            </select>
-        </label>
-        <label for="days">
-            Lookback (Days)
-            <input type="number" name="days" id="days" value="7">
-        </label>
-    </div>
+<div class="surface-grid">
+    <section class="span-8">
+        {% if presets %}
+        <article class="surface subtle" style="margin-bottom: 1rem;">
+            <div class="surface-header">
+                <div>
+                    <div class="eyebrow">Presets</div>
+                    <h3>Load Saved Preset</h3>
+                </div>
+            </div>
+            <label for="preset-loader">
+                Choose a preset
+                <select id="preset-loader" onchange="loadPreset(this.value)">
+                    <option value="">-- Choose a Preset --</option>
+                    {% for pname, pval in presets.items() %}
+                    <option value='{{ pval|tojson }}'>{{ pname }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+        </article>
+        {% endif %}
 
-    <div class="grid">
-        <label for="config_path">
-            Config Path
-            <input type="text" name="config_path" id="config_path" value="{{ config.config_path or 'config/pod2wiki.config.yaml' }}">
-        </label>
-        <label for="env_file">
-            Env File (.env)
-            <input type="text" name="env_file" id="env_file" value="config/pod2wiki.env">
-        </label>
-    </div>
+        <form action="/scan" method="post" id="scan-form"
+              class="surface"
+              hx-post="/api/scan/estimate" hx-trigger="change delay:500ms, load" hx-target="#estimate-result">
+            <div class="surface-header">
+                <div>
+                    <div class="eyebrow">Run Setup</div>
+                    <h3>Core Parameters</h3>
+                </div>
+                <span class="badge status-pending">HTMX estimate</span>
+            </div>
 
-    <div class="grid">
-        <label for="output_dir">
-            Output Directory
-            <input type="text" name="output_dir" id="output_dir" value="output">
-        </label>
-        <label for="wiki_out">
-            Wiki Root Directory
-            <input type="text" name="wiki_out" id="wiki_out" value="{{ config.wiki_root }}">
-        </label>
-    </div>
+            <div class="form-grid">
+                <div class="span-6 field-card">
+                    <label for="mode">
+                        Mode
+                        <select name="mode" id="mode">
+                            <option value="all">All (RSS + YouTube)</option>
+                            <option value="rss">RSS Only</option>
+                            <option value="youtube">YouTube Only</option>
+                            <option value="file">Local File Only</option>
+                        </select>
+                    </label>
+                </div>
+                <div class="span-6 field-card">
+                    <label for="days">
+                        Lookback (Days)
+                        <input type="number" name="days" id="days" value="7">
+                    </label>
+                </div>
 
-    <label for="input_files">
-        Input Local Files (comma separated paths)
-        <input type="text" name="input_files" id="input_files" placeholder="e.g., examples/sample.md, path/to/transcript.txt">
-    </label>
+                <div class="span-6 field-card">
+                    <label for="config_path">
+                        Config Path
+                        <input type="text" name="config_path" id="config_path" value="{{ config.config_path or 'config/pod2wiki.config.yaml' }}">
+                    </label>
+                </div>
+                <div class="span-6 field-card">
+                    <label for="env_file">
+                        Env File (.env)
+                        <input type="text" name="env_file" id="env_file" value="config/pod2wiki.env">
+                    </label>
+                </div>
 
-    <div class="grid">
-        <label for="no_llm">
-            <input type="checkbox" name="no_llm" id="no_llm" value="true">
-            No LLM (Dry run/Test)
-        </label>
-        <label for="translate_full">
-            <input type="checkbox" name="translate_full" id="translate_full" value="true">
-            Translate Full Text
-        </label>
-    </div>
+                <div class="span-6 field-card">
+                    <label for="output_dir">
+                        Output Directory
+                        <input type="text" name="output_dir" id="output_dir" value="output">
+                    </label>
+                </div>
+                <div class="span-6 field-card">
+                    <label for="wiki_out">
+                        Wiki Root Directory
+                        <input type="text" name="wiki_out" id="wiki_out" value="{{ config.wiki_root }}">
+                    </label>
+                </div>
 
-    <div id="estimate-result" style="margin-bottom: 2rem;">
-        <!-- Dynamic estimate loaded here -->
-        Loading workload estimate...
-    </div>
+                <div class="span-12 field-card">
+                    <label for="input_files">
+                        Input Local Files (comma separated paths)
+                        <input type="text" name="input_files" id="input_files" placeholder="e.g., examples/sample.md, path/to/transcript.txt">
+                    </label>
+                </div>
 
-    <div class="grid">
-        <button type="submit">Execute Scan in Background</button>
-        <button type="button" class="outline secondary" onclick="document.getElementById('save-preset-dialog').showModal()">Save as Preset</button>
-    </div>
-</form>
+                <div class="span-6 field-card">
+                    <label for="no_llm">
+                        <input type="checkbox" name="no_llm" id="no_llm" value="true">
+                        No LLM (Dry run/Test)
+                    </label>
+                    <small class="muted">Use collection and file generation without model calls.</small>
+                </div>
+                <div class="span-6 field-card">
+                    <label for="translate_full">
+                        <input type="checkbox" name="translate_full" id="translate_full" value="true">
+                        Translate Full Text
+                    </label>
+                    <small class="muted">Include full transcript translation in addition to summaries.</small>
+                </div>
+            </div>
+
+            <div class="quick-actions" style="margin-top: 1.25rem;">
+                <button type="submit">Execute Scan in Background</button>
+                <button type="button" class="outline secondary" onclick="document.getElementById('save-preset-dialog').showModal()">Save as Preset</button>
+            </div>
+        </form>
+    </section>
+
+    <aside class="span-4 stack-sm">
+        <div id="estimate-result">
+            <!-- Dynamic estimate loaded here -->
+            <article class="surface subtle">
+                <div class="surface-header">
+                    <div>
+                        <div class="eyebrow">Estimate</div>
+                        <h3>Loading Workload</h3>
+                    </div>
+                </div>
+                <p class="lede">The pre-run estimate will appear here after the initial HTMX request.</p>
+            </article>
+        </div>
+        <article class="surface subtle">
+            <div class="surface-header">
+                <div>
+                    <div class="eyebrow">Notes</div>
+                    <h3>Safe Defaults</h3>
+                </div>
+            </div>
+            <div class="stack-sm muted">
+                <div>Use `all` mode for normal daily collection.</div>
+                <div>Set `no_llm` when validating feeds or file paths.</div>
+                <div>Keep `translate_full` off unless you need full review material.</div>
+            </div>
+        </article>
+    </aside>
+</div>
 
 <dialog id="save-preset-dialog">
     <article>

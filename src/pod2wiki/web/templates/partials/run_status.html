@@ -1,16 +1,37 @@
 <div id="run-status-fragment" hx-get="/api/runs/{{ run_id }}/status" hx-trigger="every 5s" hx-swap="outerHTML">
-    <article>
-        <header>Processing Status</header>
-        <div class="grid">
-            <div><strong>Total:</strong> {{ total }}</div>
-            <div><strong>Written:</strong> <span class="status-completed">{{ written }}</span></div>
-            <div><strong>Failed:</strong> <span class="status-failed">{{ failed }}</span></div>
+    <article class="surface">
+        <div class="surface-header">
+            <div>
+                <div class="eyebrow">Status</div>
+                <h3>Processing Status</h3>
+            </div>
+            {% if total > 0 and (written + failed) == total %}
+            <span class="badge status-completed">Completed</span>
+            {% else %}
+            <span class="badge status-running">In Progress</span>
+            {% endif %}
         </div>
+        <div class="metric-row">
+            <div class="metric-card">
+                <span class="metric-label">Total</span>
+                <div class="metric-value">{{ total }}</div>
+            </div>
+            <div class="metric-card">
+                <span class="metric-label">Written</span>
+                <div class="metric-value status-completed">{{ written }}</div>
+            </div>
+            <div class="metric-card">
+                <span class="metric-label">Failed</span>
+                <div class="metric-value status-failed">{{ failed }}</div>
+            </div>
+        </div>
+        <div class="stack-sm" style="margin-top: 1rem;">
         <progress value="{{ written + failed }}" max="{{ total }}"></progress>
         {% if total > 0 and (written + failed) == total %}
-            <p>[green]Run Completed.[/green]</p>
+            <p class="lede">Run completed. Review item details and warnings below.</p>
         {% else %}
-            <p>Scanning and processing in progress...</p>
+            <p class="lede">Scanning and processing are still in progress.</p>
         {% endif %}
+        </div>
     </article>
 </div>

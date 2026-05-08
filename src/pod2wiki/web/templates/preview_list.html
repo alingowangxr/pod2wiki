@@ -1,55 +1,175 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Output Preview</h2>
-
-<section>
-    <h3>Summarized Sources</h3>
-    {% if sources %}
-    <table>
-        <thead><tr><th>Filename</th><th>Action</th></tr></thead>
-        <tbody>
-            {% for f in sources %}
-            <tr><td>{{ f.name }}</td><td><a href="/preview/sources/{{ f.name }}" role="button" class="secondary">View</a></td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% else %}<p>No sources found.</p>{% endif %}
+<section class="page-header">
+    <div>
+        <div class="eyebrow">Preview</div>
+        <h2>Output Preview</h2>
+        <p class="page-meta">Inspect generated source summaries, raw transcripts, translations, and the insight log.</p>
+    </div>
+    <div class="quick-actions">
+        <span class="badge status-pending">{{ sources|length + raw|length + translations|length }} visible files</span>
+    </div>
 </section>
 
-<section>
-    <h3>Raw Transcripts</h3>
-    {% if raw %}
-    <table>
-        <thead><tr><th>Filename</th><th>Action</th></tr></thead>
-        <tbody>
-            {% for f in raw %}
-            <tr><td>{{ f.name }}</td><td><a href="/preview/raw/{{ f.name }}" role="button" class="secondary">View</a></td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% else %}<p>No raw transcripts found.</p>{% endif %}
+<section class="surface">
+    <div class="surface-header">
+        <div>
+            <div class="eyebrow">Filter</div>
+            <h3>Preview Filters</h3>
+        </div>
+    </div>
+    <form method="get" action="/preview" class="filter-bar">
+        <label class="filter-field" for="preview-q">
+            Search
+            <input type="text" id="preview-q" name="q" value="{{ filters.q }}" placeholder="Filename contains...">
+        </label>
+        <label class="filter-field" for="preview-review-status">
+            Translation Review
+            <select id="preview-review-status" name="review_status">
+                <option value="" {% if not filters.review_status %}selected{% endif %}>All reviews</option>
+                <option value="pending" {% if filters.review_status == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="accepted" {% if filters.review_status == 'accepted' %}selected{% endif %}>Accepted</option>
+                <option value="rejected" {% if filters.review_status == 'rejected' %}selected{% endif %}>Rejected</option>
+            </select>
+        </label>
+        <div class="quick-actions">
+            <button type="submit">Apply Filters</button>
+            <a href="/preview" role="button" class="secondary">Reset</a>
+        </div>
+    </form>
 </section>
 
-<section>
-    <h3>Full Translations</h3>
-    {% if translations %}
-    <table>
-        <thead><tr><th>Filename</th><th>Action</th></tr></thead>
-        <tbody>
-            {% for f in translations %}
-            <tr><td>{{ f.name }}</td><td><a href="/preview/translations/{{ f.name }}" role="button" class="secondary">View</a></td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% else %}<p>No translations found.</p>{% endif %}
+<section class="surface">
+    <div class="surface-header">
+        <div>
+            <div class="eyebrow">Review Queue</div>
+            <h3>Pending Translation Reviews</h3>
+        </div>
+        <div class="quick-actions">
+            <span class="badge status-pending">{{ review_counts.pending }} pending</span>
+            <span class="badge status-completed">{{ review_counts.accepted }} accepted</span>
+            <span class="badge status-failed">{{ review_counts.rejected }} rejected</span>
+        </div>
+    </div>
+    {% if pending_review_entries %}
+    <div class="stack-sm">
+        {% for entry in pending_review_entries %}
+        <div class="info-item">
+            <div>
+                <strong>{{ entry.file.name }}</strong>
+                {% if entry.review.notes %}
+                <div class="muted">Note: {{ entry.review.notes }}</div>
+                {% endif %}
+            </div>
+            <a href="/preview/translations/{{ entry.file.name }}">Review</a>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">No pending translation reviews.</div>
+    {% endif %}
 </section>
 
-<section>
-    <h3>System Logs</h3>
+<section class="surface-grid">
+    <div class="span-4">
+        <article class="surface">
+            <div class="surface-header">
+                <div>
+                    <div class="eyebrow">Summaries</div>
+                    <h3>Summarized Sources</h3>
+                </div>
+                <span class="badge status-pending">{{ sources|length }}</span>
+            </div>
+            {% if sources %}
+            <div class="stack-sm">
+                {% for f in sources %}
+                <div class="info-item">
+                    <div>{{ f.name }}</div>
+                    <a href="/preview/sources/{{ f.name }}">View</a>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">No sources found.</div>
+            {% endif %}
+        </article>
+    </div>
+
+    <div class="span-4">
+        <article class="surface">
+            <div class="surface-header">
+                <div>
+                    <div class="eyebrow">Raw</div>
+                    <h3>Raw Transcripts</h3>
+                </div>
+                <span class="badge status-pending">{{ raw|length }}</span>
+            </div>
+            {% if raw %}
+            <div class="stack-sm">
+                {% for f in raw %}
+                <div class="info-item">
+                    <div>{{ f.name }}</div>
+                    <a href="/preview/raw/{{ f.name }}">View</a>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">No raw transcripts found.</div>
+            {% endif %}
+        </article>
+    </div>
+
+    <div class="span-4">
+        <article class="surface">
+            <div class="surface-header">
+                <div>
+                    <div class="eyebrow">Translations</div>
+                    <h3>Full Translations</h3>
+                </div>
+                <div class="quick-actions">
+                    <span class="badge status-pending">{{ translations|length }} visible</span>
+                    {% if filters.review_status %}
+                    <span class="badge status-pending">{{ filters.review_status }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% if translation_entries %}
+            <div class="stack-sm">
+                {% for entry in translation_entries %}
+                <div class="info-item">
+                    <div>
+                        <div>{{ entry.file.name }}</div>
+                        <div style="margin-top: 0.25rem;">
+                            <span class="badge status-{{ entry.review.status or 'pending' }}">{{ entry.review.status or 'pending' }}</span>
+                        </div>
+                    </div>
+                    <a href="/preview/translations/{{ entry.file.name }}">View</a>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">No translations match the current filters.</div>
+            {% endif %}
+        </article>
+    </div>
+</section>
+
+<section class="surface">
+    <div class="surface-header">
+        <div>
+            <div class="eyebrow">Logs</div>
+            <h3>System Logs</h3>
+        </div>
+    </div>
     {% if insight_log %}
-    <p>AI Insight Log: <a href="/preview/log/{{ insight_log.name }}" role="button" class="secondary">View</a></p>
-    {% else %}<p>No insight log found.</p>{% endif %}
+    <div class="quick-actions">
+        <span class="muted">AI Insight Log: <code>{{ insight_log.name }}</code></span>
+        <a href="/preview/log/{{ insight_log.name }}" role="button" class="secondary">View</a>
+    </div>
+    {% else %}
+    <div class="empty-state">No insight log found.</div>
+    {% endif %}
 </section>
 
 {% endblock %}

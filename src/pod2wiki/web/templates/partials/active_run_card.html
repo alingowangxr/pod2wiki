@@ -1,31 +1,47 @@
 {% if active_run %}
 <div id="active-run-card" hx-get="/api/dashboard/active-run" hx-trigger="every 5s" hx-swap="outerHTML">
-    <article>
-        <header>
-            <span class="status-running">●</span> Current Active Run
-        </header>
-        <div class="grid">
+    <article class="surface">
+        {% set completed = active_run.total_items - active_run.failed_items - active_run.skipped_items %}
+        <div class="surface-header">
             <div>
-                <strong>Run ID:</strong><br>
-                <code>{{ active_run.id }}</code>
+                <div class="eyebrow">Live Activity</div>
+                <h3>Current Active Run</h3>
             </div>
-            <div>
-                <strong>Progress:</strong><br>
-                {{ active_run.total_items - active_run.failed_items - active_run.skipped_items }} / {{ active_run.total_items }}
+            <span class="badge status-running">Running</span>
+        </div>
+        <div class="metric-row">
+            <div class="metric-card">
+                <span class="metric-label">Run ID</span>
+                <div class="metric-note"><code>{{ active_run.id }}</code></div>
+            </div>
+            <div class="metric-card">
+                <span class="metric-label">Progress</span>
+                <div class="metric-value">{{ completed }} / {{ active_run.total_items }}</div>
+                <div class="metric-note">{{ active_run.failed_items }} failed · {{ active_run.skipped_items }} skipped</div>
             </div>
         </div>
-        <progress value="{{ active_run.total_items - active_run.failed_items - active_run.skipped_items }}" max="{{ active_run.total_items }}"></progress>
-        <footer>
-            <a href="/runs/{{ active_run.id }}" role="button" class="secondary outline">Live Details</a>
-        </footer>
+        <div class="stack-sm" style="margin-top: 1rem;">
+            <progress value="{{ completed }}" max="{{ active_run.total_items }}"></progress>
+            <div class="quick-actions">
+                <a href="/runs/{{ active_run.id }}" role="button" class="secondary">Live Details</a>
+            </div>
+        </div>
     </article>
 </div>
 {% else %}
 <div id="active-run-card" hx-get="/api/dashboard/active-run" hx-trigger="every 10s" hx-swap="outerHTML">
-    <article>
-        <header>System Status</header>
-        <p>No active scan running. <span style="color: green;">Idle.</span></p>
-        <footer><a href="/scan" role="button">Start New Scan</a></footer>
+    <article class="surface subtle">
+        <div class="surface-header">
+            <div>
+                <div class="eyebrow">System Status</div>
+                <h3>No Active Scan</h3>
+            </div>
+            <span class="badge status-pending">Idle</span>
+        </div>
+        <p class="lede">The worker queue is currently quiet. Start a new scan when you want to collect and process fresh content.</p>
+        <div class="quick-actions">
+            <a href="/scan" role="button">Start New Scan</a>
+        </div>
     </article>
 </div>
 {% endif %}

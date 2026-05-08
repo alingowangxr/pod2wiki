@@ -1,85 +1,120 @@
-theme: ai-investing
-days_lookback: 7
-max_items_per_feed: 3
-# YouTube is rate-limit sensitive. Keep this near 3-5; use RSS or local
-# transcripts for large historical backfills.
-max_videos_per_channel: 5
-max_transcript_chars: 15000
-
-# Whisper auto-transcription for RSS podcast MP3s.
-# When an RSS <description> is shorter than auto_threshold chars and the item
-# has an enclosure URL, fetch_podcasts.py downloads the audio and runs
-# faster-whisper on it (CLI flags --whisper-model / --whisper-clip-seconds /
-# --no-whisper / --whisper-threshold override these).
-whisper:
-  enabled: true              # set false to skip transcription, use RSS description
-  model: tiny                # tiny | base | small | medium | large-v3
-  clip_seconds: 600          # transcribe first N seconds; null = whole episode
-  auto_threshold: 1500       # auto-transcribe if RSS description shorter than this
-
-llm:
-  provider: deepseek
-  model: deepseek-chat
-  max_tokens: 4096
-  translation_max_tokens: 4096
-  report_max_tokens: 6000
-
-# Default starter pack: 10 high-signal AI investing sources.
-# Add more channels / people / blogs as you discover them.
-
-channels:
-  - name: Dwarkesh Podcast
-    youtube: "https://www.youtube.com/@DwarkeshPatel/videos"
-    rss: "https://www.dwarkesh.com/feed"
-    keywords: [AI, AGI, compute, scaling]
-  - name: Lex Fridman
-    youtube: "https://www.youtube.com/@lexfridman/videos"
-    rss: "https://lexfridman.com/feed/podcast/"
-    keywords: [AI, robotics, science]
-  - name: Latent Space
-    youtube: "https://www.youtube.com/@LatentSpaceTV/videos"
-    rss: "https://api.substack.com/feed/podcast/1084089.rss"
-    keywords: [LLM, agents, AI engineering]
-  - name: Andrej Karpathy
-    youtube: "https://www.youtube.com/@AndrejKarpathy/videos"
-    keywords: [AI, LLM, neural networks]
-
-people_searches:
-  - "Dylan Patel SemiAnalysis interview"
-  - "Leopold Aschenbrenner AI interview"
-  - "Doug O'Laughlin semiconductor interview"
-
-exec_searches:
-  - "Sam Altman interview"
-  - "Jensen Huang interview"
-
-youtube_urls: []
-
 blog_feeds:
-  - name: SemiAnalysis
-    url: "https://www.semianalysis.com/feed"
-    author: Dylan Patel
-
+- author: Dylan Patel
+  name: SemiAnalysis
+  url: https://www.semianalysis.com/feed
+- author: admin
+  name: AI hot
+  url: https://aihot.virxact.com/feed/all.xml
+- author: admin
+  name: AI hot 日報
+  url: https://aihot.virxact.com/feed/daily.xml
+- name: Stratechery
+  url: https://stratechery.com/feed/
+- name: The Overshoot
+  url: https://theovershoot.co/feed
+channels:
+- keywords:
+  - AI
+  - AGI
+  - compute
+  - scaling
+  name: Dwarkesh Podcast
+  rss: https://www.dwarkesh.com/feed
+  youtube: https://www.youtube.com/@DwarkeshPatel/videos
+- keywords:
+  - AI
+  - robotics
+  - science
+  name: Lex Fridman
+  rss: https://lexfridman.com/feed/podcast/
+  youtube: https://www.youtube.com/@lexfridman/videos
+- keywords:
+  - LLM
+  - agents
+  - AI engineering
+  name: Latent Space
+  rss: https://api.substack.com/feed/podcast/1084089.rss
+  youtube: https://www.youtube.com/@LatentSpaceTV/videos
+- keywords:
+  - AI
+  - LLM
+  - neural networks
+  name: Andrej Karpathy
+  rss: ''
+  youtube: https://www.youtube.com/@AndrejKarpathy/videos
+- keywords: []
+  name: BG2 Pod
+  rss: ''
+  youtube: https://www.youtube.com/@bg2pod/videos
+- keywords: []
+  name: Odd Lots
+  rss: ''
+  youtube: https://www.youtube.com/@BloombergPodcasts/search?query=odd+lots
+days_lookback: 7
+exec_searches:
+- Sam Altman interview
+- Jensen Huang interview
 hypotheses:
   H1:
+    keywords:
+    - AI capex
+    - compute demand
+    - model deployment
+    - inference
     title: AI capex and application growth
-    keywords: [AI capex, compute demand, model deployment, inference]
   H2:
+    keywords:
+    - GPU
+    - NVIDIA
+    - AMD
+    - TSMC
+    - HBM
+    - capacity
     title: AI hardware supply bottlenecks
-    keywords: [GPU, NVIDIA, AMD, TSMC, HBM, capacity]
   H3:
+    keywords:
+    - power
+    - grid
+    - data center
+    - energy
     title: Data center power bottleneck
-    keywords: [power, grid, data center, energy]
   H4:
+    keywords:
+    - Europe
+    - policy
+    - power
+    - data centers
     title: Europe as AI infrastructure host
-    keywords: [Europe, policy, power, data centers]
-
+llm:
+  max_tokens: 4096
+  model: deepseek-chat
+  provider: deepseek
+  report_max_tokens: 6000
+  translation_max_tokens: 4096
+max_items_per_feed: 3
+max_transcript_chars: 15000
+max_videos_per_channel: 5
+people_searches:
+- Dylan Patel SemiAnalysis interview
+- Leopold Aschenbrenner AI interview
+- Doug O'Laughlin semiconductor interview
+post_processors: []
+presets: {}
 reversal_triggers:
-  - "而非"
-  - "而不是"
-  - "实际上"
-  - "颠覆"
-  - "打破共识"
-  - "rather than"
-  - "instead of"
-  - "actually"
+- 而非
+- 而不是
+- 实际上
+- 颠覆
+- 打破共识
+- rather than
+- instead of
+- actually
+theme: ai-investing
+whisper:
+  auto_threshold: 1500
+  clip_seconds: 600
+  enabled: true
+  model: tiny
+wiki_root: wiki
+youtube_search_queries: []
+youtube_urls: []

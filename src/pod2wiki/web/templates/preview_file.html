@@ -3,84 +3,124 @@
 {% block title %}Preview: {{ filename }}{% endblock %}
 
 {% block content %}
-<header>
-    <a href="/preview" class="outline" role="button">Back to list</a>
-    <h2>File: {{ filename }}</h2>
-    
-    {% if video_id %}
-    <div style="margin-bottom: 2rem;">
+<section class="page-header">
+    <div>
+        <div class="eyebrow">File Preview</div>
+        <h2>File: {{ filename }}</h2>
+        <p class="page-meta">Category: <code>{{ category }}</code></p>
+    </div>
+    <div class="quick-actions">
+        <a href="/preview" class="outline" role="button">Back to list</a>
+    </div>
+</section>
+
+{% if video_id %}
+<section class="surface">
+    <div class="surface-header">
+        <div>
+            <div class="eyebrow">Media</div>
+            <h3>Video Context</h3>
+        </div>
+    </div>
+    <div style="margin-bottom: 1rem;">
         <iframe width="100%" height="450" src="https://www.youtube.com/embed/{{ video_id }}" frameborder="0" allowfullscreen></iframe>
     </div>
-    
-    <section style="margin-bottom: 2rem;">
+
+    <section>
         <h4>Frames & Charts Gallery</h4>
-        <div class="grid" style="grid-template-columns: repeat(4, 1fr); gap: 10px;">
-            <article style="padding: 0; overflow: hidden;">
-                <img src="https://img.youtube.com/vi/{{ video_id }}/maxresdefault.jpg" alt="Frame 0" style="width: 100%; height: auto; cursor: zoom-in;" onclick="window.open(this.src)">
-                <footer style="font-size: 0.7rem; padding: 0.2rem;">MaxRes</footer>
+        <div class="media-grid">
+            <article class="media-card">
+                <img src="https://img.youtube.com/vi/{{ video_id }}/maxresdefault.jpg" alt="Frame 0" onclick="window.open(this.src)">
+                <footer>MaxRes</footer>
             </article>
-            <article style="padding: 0; overflow: hidden;">
-                <img src="https://img.youtube.com/vi/{{ video_id }}/1.jpg" alt="Frame 1" style="width: 100%; height: auto; cursor: zoom-in;" onclick="window.open(this.src)">
-                <footer style="font-size: 0.7rem; padding: 0.2rem;">Frame 1</footer>
+            <article class="media-card">
+                <img src="https://img.youtube.com/vi/{{ video_id }}/1.jpg" alt="Frame 1" onclick="window.open(this.src)">
+                <footer>Frame 1</footer>
             </article>
-            <article style="padding: 0; overflow: hidden;">
-                <img src="https://img.youtube.com/vi/{{ video_id }}/2.jpg" alt="Frame 2" style="width: 100%; height: auto; cursor: zoom-in;" onclick="window.open(this.src)">
-                <footer style="font-size: 0.7rem; padding: 0.2rem;">Frame 2</footer>
+            <article class="media-card">
+                <img src="https://img.youtube.com/vi/{{ video_id }}/2.jpg" alt="Frame 2" onclick="window.open(this.src)">
+                <footer>Frame 2</footer>
             </article>
-            <article style="padding: 0; overflow: hidden;">
-                <img src="https://img.youtube.com/vi/{{ video_id }}/3.jpg" alt="Frame 3" style="width: 100%; height: auto; cursor: zoom-in;" onclick="window.open(this.src)">
-                <footer style="font-size: 0.7rem; padding: 0.2rem;">Frame 3</footer>
+            <article class="media-card">
+                <img src="https://img.youtube.com/vi/{{ video_id }}/3.jpg" alt="Frame 3" onclick="window.open(this.src)">
+                <footer>Frame 3</footer>
             </article>
         </div>
-        <small>Note: These are baseline video keyframes. Advanced chart extraction via vision models is coming soon.</small>
+        <small class="muted">These are baseline video keyframes. Advanced chart extraction via vision models is still pending.</small>
     </section>
-    {% endif %}
-</header>
+</section>
+{% endif %}
 
 {% if category == "translations" and original_content %}
-<div class="grid">
-    <section>
-        <h4>Original Transcript</h4>
-        <article style="white-space: pre-wrap; font-family: monospace; font-size: 0.8rem; height: 600px; overflow-y: auto; border: 1px solid #ccc; padding: 0.5rem;">
-{{ original_content }}
-        </article>
-    </section>
-    <section>
-        <h4>Translation</h4>
-        <article style="white-space: pre-wrap; font-family: monospace; font-size: 0.8rem; height: 600px; overflow-y: auto; border: 1px solid #ccc; padding: 0.5rem;">
-{{ content }}
-        </article>
-    </section>
-</div>
+<section class="split-grid">
+    <article class="surface">
+        <div class="surface-header">
+            <div>
+                <div class="eyebrow">Original</div>
+                <h3>Original Transcript</h3>
+            </div>
+        </div>
+        <div class="content-viewer compact">{{ original_content }}</div>
+    </article>
 
-<section style="margin-top: 2rem; padding: 1rem; background: #f9f9f9; border-radius: 8px;">
-    <h3>Translation Review</h3>
+    <article class="surface">
+        <div class="surface-header">
+            <div>
+                <div class="eyebrow">Translation</div>
+                <h3>Translated Content</h3>
+            </div>
+        </div>
+        <div class="content-viewer compact">{{ content }}</div>
+    </article>
+</section>
+
+<section class="surface">
+    <div class="surface-header">
+        <div>
+            <div class="eyebrow">Review</div>
+            <h3>Translation Review</h3>
+        </div>
+    </div>
     <div id="review-panel">
         {% include "partials/review_status_badge.html" with context %}
-        
+
         <form hx-post="/api/review/{{ item_id }}" hx-target="#review-badge-{{ item_id }}" hx-swap="outerHTML" style="margin-top: 1rem;">
-            <div class="grid">
-                <label for="status">
-                    Action
-                    <select name="status" id="status">
-                        <option value="accepted" {% if review.status == 'accepted' %}selected{% endif %}>Accept Translation</option>
-                        <option value="rejected" {% if review.status == 'rejected' %}selected{% endif %}>Reject / Flag for Rerun</option>
-                        <option value="pending" {% if review.status == 'pending' %}selected{% endif %}>Keep Pending</option>
-                    </select>
-                </label>
-                <label for="notes">
-                    Review Notes
-                    <input type="text" name="notes" id="notes" value="{{ review.notes }}" placeholder="e.g. Terms are accurate, or Fix company names">
-                </label>
+            <div class="form-grid">
+                <div class="span-4 field-card">
+                    <label for="status">
+                        Action
+                        <select name="status" id="status">
+                            <option value="accepted" {% if review.status == 'accepted' %}selected{% endif %}>Accept Translation</option>
+                            <option value="rejected" {% if review.status == 'rejected' %}selected{% endif %}>Reject / Flag for Rerun</option>
+                            <option value="pending" {% if review.status == 'pending' %}selected{% endif %}>Keep Pending</option>
+                        </select>
+                    </label>
+                </div>
+                <div class="span-8 field-card">
+                    <label for="notes">
+                        Review Notes
+                        <input type="text" name="notes" id="notes" value="{{ review.notes }}" placeholder="e.g. Terms are accurate, or Fix company names">
+                    </label>
+                </div>
             </div>
-            <button type="submit" class="contrast">Update Review Status</button>
+            <div class="sticky-actions" style="margin-top: 1rem;">
+                <div class="quick-actions">
+                    <button type="submit" class="contrast">Update Review Status</button>
+                    <span class="muted">Review actions stay pinned while you scroll the transcript.</span>
+                </div>
+            </div>
         </form>
     </div>
 </section>
 {% else %}
-<article style="white-space: pre-wrap; font-family: monospace; font-size: 0.9rem;">
-{{ content }}
+<article class="surface">
+    <div class="surface-header">
+        <div>
+            <div class="eyebrow">Content</div>
+            <h3>Preview</h3>
+        </div>
+    </div>
+    <div class="content-viewer">{{ content }}</div>
 </article>
 {% endif %}
-
 {% endblock %}

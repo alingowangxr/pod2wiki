@@ -3,10 +3,24 @@
 {% block title %}User Management - pod2wiki{% endblock %}
 
 {% block content %}
-<h2>User Management</h2>
+<section class="page-header">
+    <div>
+        <div class="eyebrow">Access Control</div>
+        <h2>User Management</h2>
+        <p class="page-meta">View all current console users and their assigned roles.</p>
+    </div>
+    <div class="quick-actions">
+        <span class="badge status-pending">{{ user_list|length }} users</span>
+    </div>
+</section>
 
-<section>
-    <h3>All Users</h3>
+<section class="table-shell">
+    <div class="table-toolbar">
+        <div>
+            <h3 class="section-title">All Users</h3>
+            <div class="muted">Current accounts stored in the local state database.</div>
+        </div>
+    </div>
     <table>
         <thead>
             <tr>
@@ -19,7 +33,7 @@
             {% for u in user_list %}
             <tr>
                 <td>{{ u.username }}</td>
-                <td>{{ u.role }}</td>
+                <td><span class="badge status-pending">{{ u.role }}</span></td>
                 <td>{{ u.created_at }}</td>
             </tr>
             {% endfor %}
@@ -27,8 +41,13 @@
     </table>
 </section>
 
-<article>
-    <header>Note</header>
-    <p>User registration is currently handled via the initial login setup. Advanced user creation and permission management are planned for future updates.</p>
+<article class="surface subtle">
+    <div class="surface-header">
+        <div>
+            <div class="eyebrow">Note</div>
+            <h3>Current Limitation</h3>
+        </div>
+    </div>
+    <p class="lede">User registration is currently handled via the initial login setup. Advanced user creation and permission management are planned for future updates.</p>
 </article>
 {% endblock %}

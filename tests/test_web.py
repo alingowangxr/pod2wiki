@@ -8,6 +8,7 @@ import shutil
 import yaml
 
 from pod2wiki.web.app import app
+from pod2wiki.persistence.state import RunStateManager
 
 # We'll use a session-scoped root for tests to avoid constant deletions failing on Win
 TEST_ROOT = Path("output/test_web_run")
@@ -124,3 +125,36 @@ def test_web_replay_workflow_auth(client):
     response = client.get("/runs/some-id", follow_redirects=False)
     assert response.status_code == 303
     assert response.headers["location"] == "/login"
+
+def test_web_runs_filtering(client):
+    cookie = get_auth_cookie(client)
+    state_mgr = RunStateManager(Path(os.environ["POD2WIKI_OUTPUT"]) / "pod2wiki_v1.db")
+
+    run_id = state_mgr.create_run(
+        {"wiki_out": "wiki-filter-target", "output_dir": "output-filter"},
+        provider="provider-x",
+        model="model-y",
+    )
+    state_mgr.finish_run(run_id, status="completed")
+
+    response = client.get("/runs?q=wiki-filter-target&status_filter=completed", cookies={"pod2wiki_session": cookie})
+    assert response.status_code == 200
+    assert run_id in response.text
+    assert "Apply Filters" in response.text
+
+def test_web_preview_review_queue(client):
+    cookie = get_auth_cookie(client)
+    output_dir = Path(os.environ["POD2WIKI_OUTPUT"])
+    translations_dir = output_dir / "translations"
+    translations_dir.mkdir(parents=True, exist_ok=True)
+    filename = "sample-video.en.md"
+    (translations_dir / filename).write_text("translated content", encoding="utf-8")
+
+    state_mgr = RunStateManager(output_dir / "pod2wiki_v1.db")
+    state_mgr.update_review_status(filename, "pending", "needs terminology pass")
+
+    response = client.get("/preview?review_status=pending&q=sample-video", cookies={"pod2wiki_session": cookie})
+    assert response.status_code == 200
+    assert "Pending Translation Reviews" in response.text
+    assert filename in response.text
+    assert "needs terminology pass" in response.text
