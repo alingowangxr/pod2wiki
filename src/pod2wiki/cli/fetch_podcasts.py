@@ -57,6 +57,11 @@ async def run_orchestrator(args: Any) -> int:
     if args.dry_run:
         from pod2wiki.reporting.estimator import CostEstimator
         from rich.panel import Panel
+        from rich.console import Console
+        import sys
+        
+        # Use a separate console for stderr to keep stdout clean for JSON
+        err_console = Console(stderr=True)
         
         estimator = CostEstimator(config)
         report = estimator.estimate(args)
@@ -79,13 +84,13 @@ async def run_orchestrator(args: Any) -> int:
 - Provider: {report['config_summary']['provider']}
 - Model: {report['config_summary']['model']}
 """
-        console.print(Panel(msg.strip(), title="Scan Dry-Run & Cost Estimate", expand=False))
+        err_console.print(Panel(msg.strip(), title="Scan Dry-Run & Cost Estimate", expand=False))
         
         if risks:
-            console.print("\n[bold red]Potential Risks Found:[/bold red]")
+            err_console.print("\n[bold red]Potential Risks Found:[/bold red]")
             for r in risks:
                 color = "red" if r["level"] == "high" else "yellow"
-                console.print(f"  [{color}]![/{color}] {r['message']}")
+                err_console.print(f"  [{color}]![/{color}] {r['message']}")
 
         payload = {
             "ok": True,
@@ -93,7 +98,7 @@ async def run_orchestrator(args: Any) -> int:
             "report": report,
             "note": "dry-run validates config and does not call network, LLM, or write files",
         }
-        # console.print_json(data=payload) # Keep silent unless verbose? 
+        print(json.dumps(payload))
         return 0
 
     # Start Run

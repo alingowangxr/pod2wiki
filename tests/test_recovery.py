@@ -81,3 +81,8 @@ def test_retry_failed_flow():
         new_details = state_mgr.get_run_details(new_run_id)
         assert len(new_details) == 1
         assert new_details[0]["stage"] == "written"
+        
+        # Release handles for Windows
+        del state_mgr
+        import gc
+        gc.collect()

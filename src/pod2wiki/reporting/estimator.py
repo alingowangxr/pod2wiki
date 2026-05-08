@@ -34,7 +34,7 @@ class CostEstimator:
         potential_files = len(getattr(args, "input_file", []))
         
         # 3. Time-window scaling (Heuristic: 1 day gets ~30% of max, 7+ days get 100%)
-        days = getattr(args, "days", 7)
+        days = getattr(args, "days", None) or 7
         scale_factor = 1.0
         if days < 7:
             scale_factor = 0.3 + (0.7 * (max(0, days - 1) / 6))
