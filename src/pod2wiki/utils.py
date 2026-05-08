@@ -112,3 +112,17 @@ def format_bullets(items: list[str] | list[dict[str, Any]]) -> str:
         else:
             lines.append(f"- {item}")
     return "\n".join(lines)
+
+
+def load_env_file(path: Path) -> None:
+    """Load key-value pairs from a file into os.environ."""
+    import os
+    if not path.is_file():
+        return
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if "=" in line:
+            key, val = line.split("=", 1)
+            os.environ[key.strip()] = val.strip().strip("'").strip('"')

@@ -91,12 +91,11 @@ if [[ ! -e "$env_target" ]]; then
 fi
 
 if [[ -z "$wiki_sources_path" ]]; then
-  wiki_sources="$target_root/wiki/sources"
+  wiki_root="$target_root/wiki"
 else
-  wiki_sources="$(python -c 'import os,sys; print(os.path.abspath(sys.argv[1]))' "$wiki_sources_path")"
+  wiki_root="$(dirname "$(python -c 'import os,sys; print(os.path.abspath(sys.argv[1]))' "$wiki_sources_path")")"
 fi
-wiki_root="$(dirname "$wiki_sources")"
-mkdir -p "$wiki_sources" "$wiki_root/raw/podcasts"
+mkdir -p "$wiki_root/sources" "$wiki_root/raw/podcasts" "$wiki_root/translations"
 
 cp "$install_root/skills/pod2wiki/SKILL.md" "$target_root/.claude/skills/pod2wiki/SKILL.md"
 cat > "$target_root/.claude/commands/pod2wiki.md" <<EOF
@@ -110,7 +109,7 @@ argument-hint: "[--mode rss|youtube|all] [--youtube-url URL] [--youtube-query QU
 Run pod2wiki from this workspace.
 
 \`\`\`bash
-python -m pod2wiki.cli.fetch_podcasts --config config/pod2wiki.config.yaml --env-file config/pod2wiki.env --output-dir output/pod2wiki --wiki-out "$wiki_sources" --days 7 --write-insight-log \$ARGUMENTS
+pod2wiki scan --config config/pod2wiki.config.yaml --env-file config/pod2wiki.env --output-dir output/pod2wiki --wiki-out "$wiki_root" --days 7 --write-insight-log \$ARGUMENTS
 \`\`\`
 
 Use \`--no-llm\` for a no-key smoke test. Use \`--translate-full\` when the user asks for full transcript translation.
@@ -119,13 +118,13 @@ Report source pages, raw pages, translation pages, insight log path, and verific
 EOF
 
 if [[ "$skip_pip" != "1" ]]; then
-  python -m pip install -r "$install_root/requirements.txt"
+  python -m pip install -e "$install_root"
 fi
 
-python -m pod2wiki.cli.fetch_podcasts --config "$config_target" --env-file "$env_target" --wiki-out "$wiki_sources" --days 1 --dry-run
+python -m pod2wiki.cli.main scan --config "$config_target" --env-file "$env_target" --wiki-out "$wiki_root" --days 1 --dry-run
 
 echo "[pod2wiki] Installed."
 echo "Config: $config_target"
 echo "Env:    $env_target"
-echo "Wiki:   $wiki_sources"
+echo "Wiki:   $wiki_root"
 echo "Command: $target_root/.claude/commands/pod2wiki.md"

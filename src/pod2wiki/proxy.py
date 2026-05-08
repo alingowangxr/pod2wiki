@@ -36,3 +36,7 @@ def requests_proxy() -> Optional[Dict[str, str]]:
     if not PROXY:
         return None
     return {"http": PROXY, "https": PROXY}
+
+
+def httpx_proxy() -> Optional[str]:
+    return PROXY

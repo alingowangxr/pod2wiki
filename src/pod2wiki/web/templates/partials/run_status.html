@@ -1,0 +1,16 @@
+<div id="run-status-fragment" hx-get="/api/runs/{{ run_id }}/status" hx-trigger="every 5s" hx-swap="outerHTML">
+    <article>
+        <header>Processing Status</header>
+        <div class="grid">
+            <div><strong>Total:</strong> {{ total }}</div>
+            <div><strong>Written:</strong> <span class="status-completed">{{ written }}</span></div>
+            <div><strong>Failed:</strong> <span class="status-failed">{{ failed }}</span></div>
+        </div>
+        <progress value="{{ written + failed }}" max="{{ total }}"></progress>
+        {% if total > 0 and (written + failed) == total %}
+            <p>[green]Run Completed.[/green]</p>
+        {% else %}
+            <p>Scanning and processing in progress...</p>
+        {% endif %}
+    </article>
+</div>

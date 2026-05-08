@@ -1,0 +1,12 @@
+<div id="review-badge-{{ item_id }}">
+    {% if status == 'accepted' %}
+        <span class="badge" style="background: green; color: white;">Accepted</span>
+    {% elif status == 'rejected' %}
+        <span class="badge" style="background: red; color: white;">Rejected</span>
+    {% else %}
+        <span class="badge" style="background: grey; color: white;">Pending Review</span>
+    {% endif %}
+    {% if notes %}
+        <small style="display: block; margin-top: 0.2rem;">Note: {{ notes }}</small>
+    {% endif %}
+</div>

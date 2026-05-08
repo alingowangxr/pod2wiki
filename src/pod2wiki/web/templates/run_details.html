@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block content %}
+<header>
+    <h2>Run Details: {{ run_id }}</h2>
+    <div hx-get="/api/runs/{{ run_id }}/status" hx-trigger="every 5s" hx-swap="outerHTML">
+        <!-- Status fragment will be loaded here -->
+        Loading status...
+    </div>
+</header>
+
+<section>
+    <h3>Processed Items</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Channel</th>
+                <th>Stage</th>
+                <th>Error</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>{{ item.title }}</td>
+                <td>{{ item.channel }}</td>
+                <td>{{ item.stage }}</td>
+                <td>{{ item.error_msg or "" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+
+<section>
+    <h3>Warnings</h3>
+    {% if warnings %}
+    <ul>
+        {% for w in warnings %}
+        <li><strong>{{ w.type }}</strong>: {{ w.message }}</li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>No warnings recorded for this run.</p>
+    {% endif %}
+</section>
+
+<section>
+    <h3>Event Timeline</h3>
+    <table class="striped">
+        <thead>
+            <tr>
+                <th>Timestamp</th>
+                <th>Item ID</th>
+                <th>Stage</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ev in events %}
+            <tr>
+                <td>{{ ev.timestamp }}</td>
+                <td>{{ ev.item_id }}</td>
+                <td>{{ ev.stage }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}

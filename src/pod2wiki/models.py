@@ -9,7 +9,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field, HttpUrl, field_validator, model_validator
 
 
 # ───────────────────────────  Source Items  ───────────────────────────
@@ -130,6 +130,7 @@ class Config(BaseModel):
     """Validated configuration loaded from the YAML config file."""
 
     theme: str = "default"
+    wiki_root: str = "wiki"
     days_lookback: int = 7
     max_items_per_feed: int = 3
     max_videos_per_channel: int = 5
@@ -141,7 +142,21 @@ class Config(BaseModel):
     exec_searches: list[str] = Field(default_factory=list)
     youtube_urls: list[str] = Field(default_factory=list)
     blog_feeds: list[dict[str, Any]] = Field(default_factory=list)
+    youtube_search_queries: list[str] = Field(default_factory=list)
     hypotheses: dict[str, dict[str, Any]] = Field(default_factory=dict)
+    presets: dict[str, dict[str, Any]] = Field(default_factory=dict)
+    post_processors: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="before")
+    @classmethod
+    def fix_empty_lists(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            # Fix common YAML issues where empty dicts are parsed as empty lists
+            for field in ["hypotheses", "presets"]:
+                if field in data and isinstance(data[field], list) and not data[field]:
+                    data[field] = {}
+        return data
+
     reversal_triggers: list[str] = Field(default_factory=list)
 
 

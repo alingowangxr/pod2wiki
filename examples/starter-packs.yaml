@@ -1,0 +1,21 @@
+ai_investing:
+  name: "AI Investing Pack"
+  description: "Top AI and tech-focused investment podcasts."
+  channels:
+    - name: "Dwarkesh Patel"
+      youtube: "https://www.youtube.com/@DwarkeshPatel/videos"
+    - name: "BG2 Pod"
+      youtube: "https://www.youtube.com/@bg2pod/videos"
+  blog_feeds:
+    - name: "Stratechery"
+      url: "https://stratechery.com/feed/"
+
+macro_economics:
+  name: "Macro & Finance Pack"
+  description: "Essential macro economic views and financial analysis."
+  channels:
+    - name: "Odd Lots"
+      youtube: "https://www.youtube.com/@BloombergPodcasts/search?query=odd+lots"
+  blog_feeds:
+    - name: "The Overshoot"
+      url: "https://theovershoot.co/feed"

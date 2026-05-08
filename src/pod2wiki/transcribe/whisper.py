@@ -68,7 +68,7 @@ class TranscriptionService:
 
         # Transcribe
         try:
-            from podcast_rss_transcribe import transcribe_audio
+            from pod2wiki.podcast_rss_transcribe import transcribe_audio
         except ImportError as exc:
             _eprint(f"[whisper] transcription unavailable: {exc}")
             return item

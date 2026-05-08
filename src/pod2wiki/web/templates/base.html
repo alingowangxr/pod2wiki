@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}pod2wiki Web Console{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <script src="https://unpkg.com/htmx.org@1.9.11"></script>
+    <style>
+        .status-completed { color: green; }
+        .status-failed { color: red; }
+        .status-running { color: orange; }
+        .nav-brand { font-weight: bold; font-size: 1.5rem; }
+    </style>
+</head>
+<body>
+    <header class="container">
+        <nav>
+            <ul>
+                <li><a href="/" class="nav-brand">pod2wiki</a></li>
+            </ul>
+            <ul>
+                <li><a href="/">Dashboard</a></li>
+                <li><a href="/runs">Runs</a></li>
+                <li><a href="/sources">Sources</a></li>
+                <li><a href="/preview">Preview</a></li>
+                <li><a href="/settings">Settings</a></li>
+                <li><a href="/scan" class="outline" role="button">New Scan</a></li>
+            </ul>
+            <ul>
+                {% if user %}
+                <li><mark>{{ user.username }}</mark></li>
+                {% if user.role == 'admin' %}
+                <li><a href="/users">Users</a></li>
+                {% endif %}
+                <li><a href="/logout" style="color: red;">Logout</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </header>
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+    <footer class="container">
+        <small>pod2wiki Local Web Console - Roadmap Phase 3</small>
+    </footer>
+</body>
+</html>

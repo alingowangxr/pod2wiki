@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Execution History</h2>
+<table class="striped">
+    <thead>
+        <tr>
+            <th></th>
+            <th>Run ID</th>
+            <th>Started</th>
+            <th>Duration</th>
+            <th>Status</th>
+            <th>S/F/Sk/W</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for run in runs %}
+        <tr id="run-row-{{ run.id }}">
+            <td>
+                <button class="outline" style="padding: 0.1rem 0.4rem; margin: 0;"
+                        hx-get="/api/runs/{{ run.id }}/items" 
+                        hx-target="#details-{{ run.id }}"
+                        onclick="this.closest('tr').nextElementSibling.hidden = !this.closest('tr').nextElementSibling.hidden">
+                    +
+                </button>
+            </td>
+            <td><a href="/runs/{{ run.id }}"><code>{{ run.id }}</code></a></td>
+            <td>{{ run.start_time[:19].replace('T', ' ') }}</td>
+            <td>{{ run.duration_sec or 0 }}s</td>
+            <td class="status-{{ run.status }}">{{ run.status }}</td>
+            <td>
+                <span data-tooltip="Success">{{ run.total_items - run.failed_items - run.skipped_items }}</span>/
+                <span data-tooltip="Failed" style="color: red;">{{ run.failed_items }}</span>/
+                <span data-tooltip="Skipped" style="color: grey;">{{ run.skipped_items }}</span>/
+                <span data-tooltip="Warnings" style="color: orange;">{{ run.warning_count }}</span>
+            </td>
+        </tr>
+        <tr id="details-row-{{ run.id }}" hidden>
+            <td colspan="6">
+                <div id="details-{{ run.id }}" style="padding: 1rem; background: #fafafa; border-radius: 8px;">
+                    Loading items...
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<small>S/F/Sk/W: Success / Failed / Skipped / Warnings. Click [+] to expand item details.</small>
+{% endblock %}

@@ -66,9 +66,67 @@ Days: {days}
 JSON:
 {json.dumps(compact, ensure_ascii=False, indent=2)}
 """
-        from llm_client import chat as llm_chat
+        from pod2wiki.llm_client import chat as llm_chat
 
         return llm_chat(
+            [
+                {
+                    "role": "system",
+                    "content": "You write concise Chinese investment research logs from structured source data.",
+                },
+                {"role": "user", "content": prompt},
+            ],
+            provider=llm_cfg.provider,
+            model=llm_cfg.model,
+            max_tokens=llm_cfg.report_max_tokens,
+            temperature=0.2,
+        )
+
+    async def generate_llm_async(self, processed: list[ProcessedItem], days: int, no_llm: bool) -> str:
+        if no_llm:
+            return self.generate(processed)
+        compact = []
+        for entry in processed:
+            item = entry.item
+            structured = entry.structured
+            compact.append(
+                {
+                    "title": item.title,
+                    "channel": item.channel,
+                    "date": item.date,
+                    "url": item.url,
+                    "summary": structured.summary,
+                    "core_views": structured.core_views,
+                    "key_data": structured.key_data,
+                    "predictions": structured.predictions,
+                    "h_links": [h.model_dump() for h in (structured.h_links or [])],
+                    "verification_warnings": [
+                        w.model_dump() for w in (structured.verification_warnings or [])
+                    ],
+                }
+            )
+        llm_cfg = self.config.llm
+        prompt = f"""Write a Chinese professional investor insight log from these podcast/article summaries.
+
+Structure:
+# pod2wiki Insight Log
+## 本次主线
+## 内容逐条整理
+## 假设影响
+## 待核查红灯
+
+Rules:
+- Separate facts from interpretation.
+- Mention verification warnings explicitly.
+- Do not invent data not present in JSON.
+
+Days: {days}
+JSON:
+{json.dumps(compact, ensure_ascii=False, indent=2)}
+"""
+        from pod2wiki.llm_client import async_chat as llm_chat
+
+        return await llm_chat(
             [
                 {
                     "role": "system",

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Output Preview</h2>
+
+<section>
+    <h3>Summarized Sources</h3>
+    {% if sources %}
+    <table>
+        <thead><tr><th>Filename</th><th>Action</th></tr></thead>
+        <tbody>
+            {% for f in sources %}
+            <tr><td>{{ f.name }}</td><td><a href="/preview/sources/{{ f.name }}" role="button" class="secondary">View</a></td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}<p>No sources found.</p>{% endif %}
+</section>
+
+<section>
+    <h3>Raw Transcripts</h3>
+    {% if raw %}
+    <table>
+        <thead><tr><th>Filename</th><th>Action</th></tr></thead>
+        <tbody>
+            {% for f in raw %}
+            <tr><td>{{ f.name }}</td><td><a href="/preview/raw/{{ f.name }}" role="button" class="secondary">View</a></td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}<p>No raw transcripts found.</p>{% endif %}
+</section>
+
+<section>
+    <h3>Full Translations</h3>
+    {% if translations %}
+    <table>
+        <thead><tr><th>Filename</th><th>Action</th></tr></thead>
+        <tbody>
+            {% for f in translations %}
+            <tr><td>{{ f.name }}</td><td><a href="/preview/translations/{{ f.name }}" role="button" class="secondary">View</a></td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}<p>No translations found.</p>{% endif %}
+</section>
+
+<section>
+    <h3>System Logs</h3>
+    {% if insight_log %}
+    <p>AI Insight Log: <a href="/preview/log/{{ insight_log.name }}" role="button" class="secondary">View</a></p>
+    {% else %}<p>No insight log found.</p>{% endif %}
+</section>
+
+{% endblock %}

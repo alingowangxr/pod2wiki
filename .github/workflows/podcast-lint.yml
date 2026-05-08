@@ -16,38 +16,43 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install pyyaml requests
+      - run: pip install -e ".[dev]"
       - name: Compile all scripts
-        run: python -c "import pathlib, py_compile; [py_compile.compile(str(p), doraise=True) for p in pathlib.Path('scripts').glob('*.py')]"
+        run: python -c "import pathlib, py_compile; [py_compile.compile(str(p), doraise=True) for p in pathlib.Path('src/pod2wiki').glob('*.py')]"
       - name: Public repo preflight
         run: python scripts/preflight_public_repo.py
       - name: Run unit tests
-        run: python -m unittest discover -s tests -p "test_*.py" -v
-      - name: Verify placeholder API keys are ignored
-        run: python -c "import os, sys; sys.path.insert(0, 'scripts'); os.environ['LLM_PROVIDER']='deepseek'; os.environ['LLM_API_KEY']='sk-xxx'; os.environ['DEEPSEEK_API_KEY']='provider-specific-test-key'; from llm_client import resolve_provider; assert resolve_provider()['api_key'] == 'provider-specific-test-key'"
+        run: python -m pytest tests -v
+      - name: Verify LLM provider resolution
+        run: python -c "import os, sys; os.environ['LLM_PROVIDER']='deepseek'; os.environ['LLM_API_KEY']='sk-xxx'; os.environ['DEEPSEEK_API_KEY']='provider-specific-test-key'; from pod2wiki.llm_client import resolve_provider; assert resolve_provider()['api_key'] == 'provider-specific-test-key'"
       - name: Validate config schema
         shell: bash
         run: |
           python -c "import yaml; yaml.safe_load(open('examples/config.ai-investing.yaml', encoding='utf-8'))"
       - name: Smoke test dry-run
-        run: python -m pod2wiki.cli.fetch_podcasts --config examples/config.ai-investing.yaml --days 1 --dry-run
+        run: python -m pod2wiki.cli.main scan --config examples/config.ai-investing.yaml --days 1 --dry-run
       - name: Smoke test local file no LLM
-        run: python -m pod2wiki.cli.fetch_podcasts --config examples/config.ai-investing.yaml --input-file examples/sample-transcript.md --no-llm --max-items 1 --write-insight-log
+        run: python -m pod2wiki.cli.main scan --config examples/config.ai-investing.yaml --input-file examples/sample-transcript.md --no-llm --write-insight-log
       - name: Install smoke test (Linux / install.sh)
         if: runner.os == 'Linux'
         shell: bash
         run: |
           target="$RUNNER_TEMP/pod2wiki-install-smoke"
           bash scripts/install.sh --target-dir "$target" --skip-pip --force
-          python "$target/tools/pod2wiki/scripts/fetch_podcasts.py" --config "$target/config/pod2wiki.config.yaml" --env-file "$target/config/pod2wiki.env" --output-dir "$target/output/pod2wiki" --wiki-out "$target/wiki/sources" --input-file "$target/tools/pod2wiki/examples/sample-transcript.md" --no-llm --write-insight-log
+          export PYTHONPATH="$target/tools/pod2wiki/src"
+          python -m pod2wiki.cli.main scan --config "$target/config/pod2wiki.config.yaml" --env-file "$target/config/pod2wiki.env" --output-dir "$target/output/pod2wiki" --wiki-out "$target/wiki" --input-file "$target/tools/pod2wiki/examples/sample-transcript.md" --no-llm --write-insight-log
           shopt -s nullglob
           matches=("$target"/wiki/sources/*-local-file-sample-ai-infrastructure-podcast.md)
-          if [ ${#matches[@]} -eq 0 ]; then echo "source page missing" >&2; exit 1; fi
+          if [ ${#matches[@]} -eq 0 ]; then echo "source page missing" >&2; ls -R "$target/wiki"; exit 1; fi
       - name: Install smoke test (Windows / install.ps1)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           $target = Join-Path $env:RUNNER_TEMP "pod2wiki-install-smoke"
           & ./scripts/install.ps1 -TargetDir $target -SkipPip -Force
-          python "$target/tools/pod2wiki/scripts/fetch_podcasts.py" --config "$target/config/pod2wiki.config.yaml" --env-file "$target/config/pod2wiki.env" --output-dir "$target/output/pod2wiki" --wiki-out "$target/wiki/sources" --input-file "$target/tools/pod2wiki/examples/sample-transcript.md" --no-llm --write-insight-log
-          if (-not (Get-ChildItem "$target/wiki/sources" -Filter "*-local-file-sample-ai-infrastructure-podcast.md" -ErrorAction SilentlyContinue)) { throw "source page missing" }
+          $env:PYTHONPATH = "$(Join-Path $target 'tools/pod2wiki/src')"
+          python -m pod2wiki.cli.main scan --config "$target/config/pod2wiki.config.yaml" --env-file "$target/config/pod2wiki.env" --output-dir "$target/output/pod2wiki" --wiki-out "$target/wiki" --input-file "$target/tools/pod2wiki/examples/sample-transcript.md" --no-llm --write-insight-log
+          if (-not (Get-ChildItem "$target/wiki/sources" -Filter "*-local-file-sample-ai-infrastructure-podcast.md" -ErrorAction SilentlyContinue)) { 
+            ls -R "$target/wiki"
+            throw "source page missing" 
+          }

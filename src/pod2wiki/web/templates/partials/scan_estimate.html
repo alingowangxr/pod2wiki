@@ -1,0 +1,35 @@
+<div id="estimate-result">
+    <article>
+        <header>Pre-run Workload & Cost Estimate</header>
+        <div class="grid">
+            <div>
+                <strong>Potential Items:</strong> {{ report.counts.max_potential_items }}
+            </div>
+            <div>
+                <strong>LLM Calls:</strong> {{ report.counts.total_llm_requests }}
+            </div>
+            <div>
+                <strong>Est. Whisper:</strong> {{ report.counts.estimated_transcriptions }}
+            </div>
+        </div>
+        
+        {% if report.risks %}
+        <div style="margin-top: 1rem;">
+            <strong>Risks Found:</strong>
+            <ul>
+                {% for risk in report.risks %}
+                <li style="color: {{ 'red' if risk.level == 'high' else 'orange' }}; font-size: 0.9rem;">
+                    {{ risk.message }}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% else %}
+        <p style="color: green; font-size: 0.9rem; margin-top: 1rem;">Low risk detected for this configuration.</p>
+        {% endif %}
+        
+        <footer>
+            <small>Config: {{ report.config_summary.provider }} / {{ report.config_summary.model }}</small>
+        </footer>
+    </article>
+</div>

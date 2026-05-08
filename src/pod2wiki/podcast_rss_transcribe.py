@@ -9,7 +9,7 @@ from pathlib import Path
 
 import requests
 
-from proxy_config import requests_proxy
+from pod2wiki.proxy_config import requests_proxy
 
 
 def slugify(text: str, max_len: int = 80) -> str:

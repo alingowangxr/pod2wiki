@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Start New Scan</h2>
+
+{% if presets %}
+<section>
+    <label for="preset-loader">Load Saved Preset</label>
+    <select id="preset-loader" onchange="loadPreset(this.value)">
+        <option value="">-- Choose a Preset --</option>
+        {% for pname, pval in presets.items() %}
+        <option value='{{ pval|tojson }}'>{{ pname }}</option>
+        {% endfor %}
+    </select>
+</section>
+{% endif %}
+
+<form action="/scan" method="post" id="scan-form" 
+      hx-post="/api/scan/estimate" hx-trigger="change delay:500ms, load" hx-target="#estimate-result">
+    <div class="grid">
+        <label for="mode">
+            Mode
+            <select name="mode" id="mode">
+                <option value="all">All (RSS + YouTube)</option>
+                <option value="rss">RSS Only</option>
+                <option value="youtube">YouTube Only</option>
+                <option value="file">Local File Only</option>
+            </select>
+        </label>
+        <label for="days">
+            Lookback (Days)
+            <input type="number" name="days" id="days" value="7">
+        </label>
+    </div>
+
+    <div class="grid">
+        <label for="config_path">
+            Config Path
+            <input type="text" name="config_path" id="config_path" value="{{ config.config_path or 'config/pod2wiki.config.yaml' }}">
+        </label>
+        <label for="env_file">
+            Env File (.env)
+            <input type="text" name="env_file" id="env_file" value="config/pod2wiki.env">
+        </label>
+    </div>
+
+    <div class="grid">
+        <label for="output_dir">
+            Output Directory
+            <input type="text" name="output_dir" id="output_dir" value="output">
+        </label>
+        <label for="wiki_out">
+            Wiki Root Directory
+            <input type="text" name="wiki_out" id="wiki_out" value="{{ config.wiki_root }}">
+        </label>
+    </div>
+
+    <label for="input_files">
+        Input Local Files (comma separated paths)
+        <input type="text" name="input_files" id="input_files" placeholder="e.g., examples/sample.md, path/to/transcript.txt">
+    </label>
+
+    <div class="grid">
+        <label for="no_llm">
+            <input type="checkbox" name="no_llm" id="no_llm" value="true">
+            No LLM (Dry run/Test)
+        </label>
+        <label for="translate_full">
+            <input type="checkbox" name="translate_full" id="translate_full" value="true">
+            Translate Full Text
+        </label>
+    </div>
+
+    <div id="estimate-result" style="margin-bottom: 2rem;">
+        <!-- Dynamic estimate loaded here -->
+        Loading workload estimate...
+    </div>
+
+    <div class="grid">
+        <button type="submit">Execute Scan in Background</button>
+        <button type="button" class="outline secondary" onclick="document.getElementById('save-preset-dialog').showModal()">Save as Preset</button>
+    </div>
+</form>
+
+<dialog id="save-preset-dialog">
+    <article>
+        <h3>Save Current Config as Preset</h3>
+        <form action="/scan/presets/save" method="post">
+            <input type="hidden" name="mode" id="p-mode">
+            <input type="hidden" name="days" id="p-days">
+            <input type="hidden" name="no_llm" id="p-no_llm">
+            <input type="hidden" name="translate_full" id="p-translate_full">
+            <input type="hidden" name="config_path" id="p-config">
+            <input type="hidden" name="wiki_out" id="p-wiki">
+            
+            <label for="preset-name">
+                Preset Name
+                <input type="text" name="name" id="preset-name" placeholder="e.g. Daily Macro Review" required>
+            </label>
+            <footer>
+                <button type="button" class="secondary" onclick="document.getElementById('save-preset-dialog').close()">Cancel</button>
+                <button type="submit" onclick="syncPresetForm()">Save Preset</button>
+            </footer>
+        </form>
+    </article>
+</dialog>
+
+<script>
+function loadPreset(val) {
+    if (!val) return;
+    const p = JSON.parse(val);
+    document.getElementById('mode').value = p.mode;
+    document.getElementById('days').value = p.days;
+    document.getElementById('no_llm').checked = p.no_llm === true || p.no_llm === "true";
+    document.getElementById('translate_full').checked = p.translate_full === true || p.translate_full === "true";
+    document.getElementById('config_path').value = p.config_path;
+    document.getElementById('wiki_out').value = p.wiki_out;
+    // Trigger HTMX estimate update
+    document.getElementById('scan-form').dispatchEvent(new Event('change'));
+}
+
+function syncPresetForm() {
+    document.getElementById('p-mode').value = document.getElementById('mode').value;
+    document.getElementById('p-days').value = document.getElementById('days').value;
+    document.getElementById('p-no_llm').value = document.getElementById('no_llm').checked;
+    document.getElementById('p-translate_full').value = document.getElementById('translate_full').checked;
+    document.getElementById('p-config').value = document.getElementById('config_path').value;
+    document.getElementById('p-wiki').value = document.getElementById('wiki_out').value;
+}
+</script>
+{% endblock %}

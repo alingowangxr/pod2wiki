@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "pod2wiki"
 version = "0.1.0"
@@ -9,8 +13,15 @@ dependencies = [
   "pydantic>=2.0",
   "pyyaml>=6.0",
   "requests>=2.31",
+  "httpx>=0.27.0",
   "yt-dlp>=2025.1.0",
   "youtube-transcript-api>=0.6.2",
+  "typer>=0.12.0",
+  "rich>=13.0.0",
+  "fastapi>=0.110.0",
+  "uvicorn>=0.27.0",
+  "jinja2>=3.1.0",
+  "python-multipart>=0.0.9",
 ]
 
 [project.optional-dependencies]
@@ -22,9 +33,15 @@ dev = [
   "ruff>=0.3.0",
 ]
 
+[project.scripts]
+pod2wiki = "pod2wiki.cli.main:app"
+
 [project.urls]
 Homepage = "https://github.com/alingowangxr/pod2wiki"
 Issues = "https://github.com/alingowangxr/pod2wiki/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.ruff]
 line-length = 100

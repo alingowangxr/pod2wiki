@@ -121,19 +121,18 @@ if (-not (Test-Path $envTarget)) {
 }
 
 if ([string]::IsNullOrWhiteSpace($WikiSourcesPath)) {
-    $wikiSources = Join-Path $targetRoot "wiki/sources"
+    $wikiRoot = Join-Path $targetRoot "wiki"
 }
 else {
-    $wikiSources = [System.IO.Path]::GetFullPath($WikiSourcesPath)
+    $wikiRoot = Split-Path -Parent [System.IO.Path]::GetFullPath($WikiSourcesPath)
 }
-$wikiRoot = Split-Path -Parent $wikiSources
-New-Item -ItemType Directory -Force -Path $wikiSources, (Join-Path $wikiRoot "raw/podcasts") | Out-Null
+New-Item -ItemType Directory -Force -Path (Join-Path $wikiRoot "sources"), (Join-Path $wikiRoot "raw/podcasts"), (Join-Path $wikiRoot "translations") | Out-Null
 
 $skillSource = Join-Path $installRoot "skills/pod2wiki/SKILL.md"
 Copy-Item -LiteralPath $skillSource -Destination (Join-Path $claudeSkillsDir "SKILL.md") -Force
 
 $commandPath = Join-Path $claudeCommandsDir "pod2wiki.md"
-$wikiSourcesForward = $wikiSources.Replace('\','/')
+$wikiRootForward = $wikiRoot.Replace('\','/')
 $fence = [string][char]0x60 + [char]0x60 + [char]0x60
 $commandTemplate = @'
 ---
@@ -146,20 +145,20 @@ argument-hint: "[--mode rss|youtube|all] [--youtube-url URL] [--youtube-query QU
 Run pod2wiki from this workspace.
 
 __FENCE__bash
-python -m pod2wiki.cli.fetch_podcasts --config config/pod2wiki.config.yaml --env-file config/pod2wiki.env --output-dir output/pod2wiki --wiki-out "__WIKI_SOURCES__" --days 7 --write-insight-log $ARGUMENTS
+pod2wiki scan --config config/pod2wiki.config.yaml --env-file config/pod2wiki.env --output-dir output/pod2wiki --wiki-out "__WIKI_ROOT__" --days 7 --write-insight-log $ARGUMENTS
 __FENCE__
 
 Use `--no-llm` for a no-key smoke test. Use `--translate-full` when the user asks for full transcript translation.
 
 Report source pages, raw pages, translation pages, insight log path, and verification warnings.
 '@
-$commandText = $commandTemplate.Replace('__INSTALL_DIR__', $InstallDirName).Replace('__WIKI_SOURCES__', $wikiSourcesForward).Replace('__FENCE__', $fence)
+$commandText = $commandTemplate.Replace('__INSTALL_DIR__', $InstallDirName).Replace('__WIKI_ROOT__', $wikiRootForward).Replace('__FENCE__', $fence)
 Write-Utf8File -Path $commandPath -Content $commandText
 
 $python = Get-UsablePythonCommand
 if ($python -and -not $SkipPip) {
-    Write-Step "Installing Python dependencies with $($python.DisplayName)"
-    & $python.Path @($python.PrefixArgs) -m pip install -r (Join-Path $installRoot "requirements.txt")
+    Write-Step "Installing Python dependencies and pod2wiki package with $($python.DisplayName)"
+    & $python.Path @($python.PrefixArgs) -m pip install -e $installRoot
     if ($LASTEXITCODE -ne 0) {
         throw "pip install failed"
     }
@@ -173,7 +172,7 @@ if ($python) {
     $prevPref = $ErrorActionPreference
     $ErrorActionPreference = 'Continue'
     try {
-        & $python.Path @($python.PrefixArgs) -m pod2wiki.cli.fetch_podcasts --config $configTarget --env-file $envTarget --wiki-out $wikiSources --days 1 --dry-run 2>&1 | ForEach-Object { Write-Host $_ }
+        & $python.Path @($python.PrefixArgs) -m pod2wiki.cli.main scan --config $configTarget --env-file $envTarget --wiki-out $wikiRoot --days 1 --dry-run 2>&1 | ForEach-Object { Write-Host $_ }
     }
     finally {
         $ErrorActionPreference = $prevPref
@@ -186,5 +185,5 @@ if ($python) {
 Write-Step "Installed."
 Write-Host "Config: $configTarget"
 Write-Host "Env:    $envTarget"
-Write-Host "Wiki:   $wikiSources"
+Write-Host "Wiki:   $wikiRoot"
 Write-Host "Command: $commandPath"

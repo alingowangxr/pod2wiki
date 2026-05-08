@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 import requests
+import httpx
 
 
 class LLMError(RuntimeError):
@@ -54,6 +55,20 @@ PROVIDERS: dict[str, dict[str, str]] = {
         "model": "OPENAI_MODEL",
         "base_default": "https://api.openai.com/v1",
         "model_default": "gpt-4o-mini",
+    },
+    "gemini": {
+        "key": "GEMINI_API_KEY",
+        "base": "GEMINI_BASE_URL",
+        "model": "GEMINI_MODEL",
+        "base_default": "https://generativelanguage.googleapis.com/v1beta/openai",
+        "model_default": "gemini-1.5-flash",
+    },
+    "ollama": {
+        "key": "OLLAMA_API_KEY",
+        "base": "OLLAMA_BASE_URL",
+        "model": "OLLAMA_MODEL",
+        "base_default": "http://localhost:11434/v1",
+        "model_default": "gemma2",
     },
 }
 
@@ -172,3 +187,44 @@ def extract_json(text: str) -> dict[str, Any]:
         if start >= 0 and end > start:
             return json.loads(cleaned[start : end + 1])
         raise
+
+
+async def async_chat(
+    messages: list[dict[str, str]],
+    provider: str | None = None,
+    model: str | None = None,
+    max_tokens: int = 4096,
+    temperature: float = 0.2,
+    timeout: int = 120,
+) -> str:
+    """Call an OpenAI-compatible chat/completions endpoint asynchronously."""
+    resolved = resolve_provider(provider, model)
+    base = resolved["base_url"].rstrip("/")
+    async with httpx.AsyncClient(timeout=timeout, trust_env=False) as client:
+        try:
+            response = await client.post(
+                f"{base}/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {resolved['api_key']}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": resolved["model"],
+                    "messages": messages,
+                    "temperature": temperature,
+                    "max_tokens": max_tokens,
+                },
+            )
+        except httpx.RequestError as exc:
+            raise LLMError(f"LLM async request failed: {exc}") from exc
+
+        if response.status_code >= 400:
+            raise LLMError(
+                f"LLM async request failed: HTTP {response.status_code} {response.text[:500]}"
+            )
+
+        data = response.json()
+        try:
+            return data["choices"][0]["message"]["content"]
+        except (KeyError, IndexError, TypeError) as exc:
+            raise LLMError(f"Unexpected LLM async response: {json.dumps(data)[:500]}") from exc

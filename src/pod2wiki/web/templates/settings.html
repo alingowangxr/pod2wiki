@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>System Settings</h2>
+
+<section>
+    <h3>Update Configuration</h3>
+    <form action="/settings/update" method="post">
+        <div class="grid">
+            <label for="provider">
+                LLM Provider
+                <input type="text" name="provider" id="provider" value="{{ config.llm.provider }}">
+            </label>
+            <label for="model">
+                LLM Model
+                <input type="text" name="model" id="model" value="{{ config.llm.model }}">
+            </label>
+        </div>
+        <div class="grid">
+            <label for="max_tokens">
+                Max Tokens
+                <input type="number" name="max_tokens" id="max_tokens" value="{{ config.llm.max_tokens }}">
+            </label>
+            <label for="wiki_out">
+                Default Wiki Root
+                <input type="text" name="wiki_out" id="wiki_out" value="{{ config.wiki_root }}">
+            </label>
+        </div>
+
+        <hr>
+        <h4>Whisper & Proxy Settings</h4>
+        <div class="grid">
+            <label for="whisper_model">
+                Whisper Model
+                <select name="whisper_model" id="whisper_model">
+                    <option value="tiny" {% if config.whisper.model == 'tiny' %}selected{% endif %}>tiny</option>
+                    <option value="base" {% if config.whisper.model == 'base' %}selected{% endif %}>base</option>
+                    <option value="small" {% if config.whisper.model == 'small' %}selected{% endif %}>small</option>
+                    <option value="medium" {% if config.whisper.model == 'medium' %}selected{% endif %}>medium</option>
+                    <option value="large-v3" {% if config.whisper.model == 'large-v3' %}selected{% endif %}>large-v3</option>
+                </select>
+            </label>
+            <label for="whisper_clip">
+                Clip Seconds
+                <input type="number" name="whisper_clip" id="whisper_clip" value="{{ config.whisper.clip_seconds }}">
+            </label>
+            <label for="whisper_threshold">
+                Auto Threshold
+                <input type="number" name="whisper_threshold" id="whisper_threshold" value="{{ config.whisper.auto_threshold }}">
+            </label>
+        </div>
+
+        <label for="proxy">
+            SOCKS5 Proxy (PODCAST_PROXY)
+            <input type="text" name="proxy" id="proxy" placeholder="socks5://127.0.0.1:1080" value="{{ os_environ.get('PODCAST_PROXY', '') }}">
+        </label>
+        
+        <button type="submit">Save All Settings</button>
+    </form>
+</section>
+
+<section>
+    <h3>Configuration Raw Preview</h3>
+    <p>File: <code>{{ paths.config }}</code></p>
+    <pre style="background: #f4f4f4; padding: 1rem;">{{ config.model_dump()|tojson(indent=2) }}</pre>
+</section>
+{% endblock %}

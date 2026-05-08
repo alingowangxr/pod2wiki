@@ -15,8 +15,8 @@ class BaseCollector(ABC):
         self.config = config
 
     @abstractmethod
-    def collect(self, days: int, history: dict[str, str] | None = None) -> Sequence[SourceItem]:
-        """Collect source items.
+    async def collect(self, days: int, history: dict[str, str] | None = None) -> Sequence[SourceItem]:
+        """Collect source items asynchronously.
 
         Args:
             days: Number of days to look back.

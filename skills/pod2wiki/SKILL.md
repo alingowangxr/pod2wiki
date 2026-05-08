@@ -5,7 +5,7 @@ description: Scan high-signal podcasts and long-form RSS feeds, summarize them, 
 
 # pod2wiki Skill
 
-Use this skill when the user says "scan podcasts", "刷播客", "刷一下播客", "podcast tracking", "播客追踪", "track podcasts this week", or asks to feed podcasts/blog RSS into a karpathy-style wiki.
+Use this skill when the user says "scan podcasts", "刷播客", "刷一下播客", "podcast tracking", "播客追蹤", "track podcasts this week", or asks to feed podcasts/blog RSS into a karpathy-style wiki.
 
 ## How pod2wiki is laid out after install
 

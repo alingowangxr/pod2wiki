@@ -13,3 +13,11 @@ venv/
 *.log
 *.baiduyun.uploading.cfg
 *.baiduyun.downloading.cfg
+.pytest_cache/
+pytest-cache-files-*/
+.gemini/
+*.egg-info/
+.tmp-review-config.yaml
+output-check/
+tmp-*/
+wiki-check/

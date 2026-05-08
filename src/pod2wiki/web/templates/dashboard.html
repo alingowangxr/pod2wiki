@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section>
+    <h2>Dashboard</h2>
+    <div class="grid">
+        {% include "partials/active_run_card.html" %}
+
+        {% if last_run %}
+        <article>
+            <header>Last Run Summary</header>
+            <p>ID: <code>{{ last_run.id }}</code></p>
+            <p>Status: <span class="status-{{ last_run.status }}">{{ last_run.status }}</span></p>
+            <p>S/F/Sk/W: 
+                {{ last_run.total_items - last_run.failed_items - last_run.skipped_items }}/
+                {{ last_run.failed_items }}/
+                {{ last_run.skipped_items }}/
+                {{ last_run.warning_count }}
+            </p>
+            <footer><a href="/runs/{{ last_run.id }}">Details</a></footer>
+        </article>
+        
+        <article>
+            <header>Active Output Locations</header>
+            <ul style="font-size: 0.8rem;">
+                <li>Wiki Root: <code>{{ last_run.command_args.get('wiki_out', 'wiki') }}</code></li>
+                <li>Logs: <code>{{ last_run.command_args.get('output_dir', 'output') }}</code></li>
+                <li>Items: <code>{{ last_run.total_items }} total</code></li>
+            </ul>
+            <footer>Config: {{ last_run.command_args.get('config', 'default') }}</footer>
+        </article>
+        {% endif %}
+    </div>
+    
+    <div class="grid">
+        <article>
+            <header>Recent Warnings</header>
+            {% if recent_warnings %}
+            <ul style="font-size: 0.8rem;">
+                {% for w in recent_warnings %}
+                <li><strong>{{ w.item_id[:15] }}</strong>: {{ w.message[:40] }}...</li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p>No recent warnings.</p>
+            {% endif %}
+            <footer><a href="/runs">View history</a></footer>
+        </article>
+    </div>
+</section>
+
+<section>
+    <h3>Execution History</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Run ID</th>
+                <th>Started</th>
+                <th>Status</th>
+                <th>S/F/Sk/W</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for run in recent_runs %}
+            <tr>
+                <td><a href="/runs/{{ run.id }}">{{ run.id }}</a></td>
+                <td>{{ run.start_time[:19] }}</td>
+                <td class="status-{{ run.status }}">{{ run.status }}</td>
+                <td>
+                    {{ run.total_items - run.failed_items - run.skipped_items }}/
+                    {{ run.failed_items }}/
+                    {{ run.skipped_items }}/
+                    {{ run.warning_count }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}

@@ -27,12 +27,12 @@ class SummarizeService:
     # ------------------------------------------------------------------ #
     # Public API
     # ------------------------------------------------------------------ #
-    def summarize(
+    async def summarize(
         self, item: SourceItem, *, no_llm: bool = False, locale: str = "zh-CN"
     ) -> StructuredSummary:
         if no_llm:
             return self._summarize_without_llm(item)
-        return self._summarize_with_llm(item, locale)
+        return await self._summarize_with_llm(item, locale)
 
     # ------------------------------------------------------------------ #
     # No-LLM fallback
@@ -64,23 +64,26 @@ class SummarizeService:
             summary=first or "No summary generated. Review the raw text.",
             core_views=[f"Keyword: {kw}" for kw in keywords[:6]],
             confidence="low",
+            h_links=[HypothesisLink(**h) for h in h_links],
         )
         # Post-process warnings
         flat = summary.model_dump()
         flat["key_points"] = summary.core_views
         flat["one_line"] = summary.summary
-        warnings = detect_reversal_flags(
+        extra_warnings = detect_reversal_flags(
             flat,
             text,
             triggers=self.config.reversal_triggers,
         )
-        summary.verification_warnings = warnings  # type: ignore[assignment]
+        if not summary.verification_warnings:
+            summary.verification_warnings = []
+        summary.verification_warnings.extend(extra_warnings)  # type: ignore[arg-type]
         return summary
 
     # ------------------------------------------------------------------ #
     # LLM-backed summarisation
     # ------------------------------------------------------------------ #
-    def _summarize_with_llm(self, item: SourceItem, locale: str) -> StructuredSummary:
+    async def _summarize_with_llm(self, item: SourceItem, locale: str) -> StructuredSummary:
         text = item.raw_text or ""
         max_chars = self.config.max_transcript_chars
         if len(text) > max_chars:
@@ -114,38 +117,47 @@ Source text:
 
         llm_cfg = self.config.llm
         # Lazy import to avoid early circular dependency
-        from llm_client import chat as llm_chat
+        from pod2wiki.llm_client import async_chat as llm_chat, extract_json
 
-        content = llm_chat(
+        content = await llm_chat(
             [{"role": "system", "content": system}, {"role": "user", "content": user}],
             provider=llm_cfg.provider,
             model=llm_cfg.model,
             max_tokens=llm_cfg.max_tokens,
         )
-        # Parse JSON – could also use extract_json from llm_client
-        data = json.loads(content)
-        summary = StructuredSummary(**data)
+        # Parse JSON
+        try:
+            data = extract_json(content)
+            summary = StructuredSummary(**data)
+        except Exception as exc:
+            # Fallback
+            summary = self._summarize_without_llm(item)
+            summary.verification_warnings.append(
+                {"type": "llm_failure", "message": f"LLM parsing failed: {exc}"}
+            )
 
         # Verification warnings
         flat = summary.model_dump()
         flat["key_points"] = summary.core_views
         flat["one_line"] = summary.summary
-        warnings = detect_reversal_flags(
+        extra_warnings = detect_reversal_flags(
             flat,
             text,
             triggers=self.config.reversal_triggers,
         )
-        summary.verification_warnings = warnings  # type: ignore[assignment]
+        if not summary.verification_warnings:
+            summary.verification_warnings = []
+        summary.verification_warnings.extend(extra_warnings)  # type: ignore[arg-type]
         return summary
 
     # ------------------------------------------------------------------ #
     # Translation (kept minimal; orchestrator wires it)
     # ------------------------------------------------------------------ #
-    def translate(
+    async def translate(
         self, text: str, target_locale: str, provider: str, model: str, max_tokens: int
     ) -> str:
-        """Translate a chunk of text. Caller is responsible for chunking."""
-        from llm_client import chat as llm_chat
+        """Translate a chunk of text asynchronously."""
+        from pod2wiki.llm_client import async_chat as llm_chat
 
         prompt = f"""Translate the following text into {target_locale}.
 
@@ -157,7 +169,7 @@ Rules:
 ---
 {text}
 ---"""
-        return llm_chat(
+        return await llm_chat(
             [
                 {
                     "role": "system",

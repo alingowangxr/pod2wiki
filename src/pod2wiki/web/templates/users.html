@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}User Management - pod2wiki{% endblock %}
+
+{% block content %}
+<h2>User Management</h2>
+
+<section>
+    <h3>All Users</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Role</th>
+                <th>Created At</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for u in user_list %}
+            <tr>
+                <td>{{ u.username }}</td>
+                <td>{{ u.role }}</td>
+                <td>{{ u.created_at }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+
+<article>
+    <header>Note</header>
+    <p>User registration is currently handled via the initial login setup. Advanced user creation and permission management are planned for future updates.</p>
+</article>
+{% endblock %}

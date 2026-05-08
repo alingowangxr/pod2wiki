@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Source Management</h2>
+
+<section>
+    <h3>Starter Source Packs</h3>
+    <div class="grid">
+        {% for pack_id, pack in packs.items() %}
+        <article>
+            <header><strong>{{ pack.name }}</strong></header>
+            <p style="font-size: 0.8rem;">{{ pack.description }}</p>
+            <footer>
+                <form action="/sources/apply-pack" method="post" style="margin: 0;">
+                    <input type="hidden" name="pack_id" value="{{ pack_id }}">
+                    <button type="submit" class="outline">Apply Pack</button>
+                </form>
+            </footer>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+
+<section>
+    <h3>Add New Source</h3>
+    <form action="/sources/add" method="post">
+        <div class="grid">
+            <label for="name">
+                Source Name
+                <input type="text" name="name" id="name" placeholder="e.g. Dwarkesh Patel" required>
+            </label>
+            <label for="url">
+                URL
+                <input type="text" name="url" id="url" placeholder="https://youtube.com/..." required>
+            </label>
+            <label for="kind">
+                Type
+                <select name="kind" id="kind">
+                    <option value="youtube">YouTube Channel</option>
+                    <option value="rss">RSS/Blog</option>
+                    <option value="search">YouTube Search Query</option>
+                </select>
+            </label>
+        </div>
+        <button type="submit">Add Source to Config</button>
+    </form>
+</section>
+
+<section>
+    <h3>YouTube Search Queries</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Query</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sq in search_queries %}
+            <tr>
+                <td>{{ sq }}</td>
+                <td>
+                    <form action="/sources/delete" method="post" style="margin-bottom: 0;">
+                        <input type="hidden" name="index" value="{{ loop.index0 }}">
+                        <input type="hidden" name="kind" value="search">
+                        <button type="submit" class="outline contrast" style="padding: 0.2rem 0.5rem; font-size: 0.8rem;">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+
+<section>
+    <h3>YouTube Channels</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>URL</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ch in channels %}
+            <tr>
+                <td>{{ ch.name }}</td>
+                <td><a href="{{ ch.youtube }}" target="_blank">{{ ch.youtube }}</a></td>
+                <td>
+                    <form action="/sources/delete" method="post" style="margin-bottom: 0;">
+                        <input type="hidden" name="index" value="{{ loop.index0 }}">
+                        <input type="hidden" name="kind" value="youtube">
+                        <button type="submit" class="outline contrast" style="padding: 0.2rem 0.5rem; font-size: 0.8rem;">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+
+<section>
+    <h3>Blog / RSS Feeds</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>URL</th>
+                <th>Author</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for feed in blog_feeds %}
+            <tr>
+                <td>{{ feed.name }}</td>
+                <td><a href="{{ feed.url }}" target="_blank">{{ feed.url }}</a></td>
+                <td>{{ feed.author }}</td>
+                <td>
+                    <form action="/sources/delete" method="post" style="margin-bottom: 0;">
+                        <input type="hidden" name="index" value="{{ loop.index0 }}">
+                        <input type="hidden" name="kind" value="rss">
+                        <button type="submit" class="outline contrast" style="padding: 0.2rem 0.5rem; font-size: 0.8rem;">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+
+<article>
+    <header>Management Note</header>
+    <p>Sources are synchronized with the <code>config.yaml</code> file. You can manage them directly here or via the Settings page.</p>
+</article>
+{% endblock %}

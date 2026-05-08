@@ -60,7 +60,32 @@ class YouTubeCollector(BaseCollector):
     # --------------------------------------------------------------------- #
     # public API
     # --------------------------------------------------------------------- #
-    def collect(
+    async def collect(
+        self,
+        days: int,
+        history: dict[str, str] | None = None,
+        youtube_mode: str = "all",
+        max_results: int = 3,
+        transcript_backend: str = "auto",
+        transcript_languages: list[str] | None = None,
+        transcript_sleep: float = 1.5,
+        explicit_urls: list[str] | None = None,
+        explicit_queries: list[str] | None = None,
+    ) -> list[SourceItem]:
+        # YouTube collection remains mostly synchronous internally for stability,
+        # but we wrap it in an async method to match the BaseCollector interface.
+        import asyncio
+        loop = asyncio.get_running_loop()
+        return await loop.run_in_executor(
+            None,
+            lambda: self._collect_sync(
+                days, history, youtube_mode, max_results,
+                transcript_backend, transcript_languages, transcript_sleep,
+                explicit_urls, explicit_queries
+            )
+        )
+
+    def _collect_sync(
         self,
         days: int,
         history: dict[str, str] | None = None,
@@ -121,7 +146,7 @@ class YouTubeCollector(BaseCollector):
     # yt-dlp helpers (kept simple, no async yet)
     # --------------------------------------------------------------------- #
     def _run_ytdlp(self, args: list[str], timeout: int = 120) -> str:
-        from proxy_config import PROXY
+        from pod2wiki.proxy_config import PROXY
 
         cmd = [sys.executable, "-m", "yt_dlp", "--no-warnings", "--quiet"]
         if PROXY:
@@ -199,12 +224,12 @@ class YouTubeCollector(BaseCollector):
             try:
                 videos.extend(
                     self._get_channel_videos(
-                        channel.youtube, channel.get("name") or "YouTube", max_results
+                        channel.youtube, channel.name or "YouTube", max_results
                     )
                 )
             except Exception as exc:
                 _eprint(
-                    f"- YouTube channel skipped: {channel.get('name') or channel.youtube} ({exc})"
+                    f"- YouTube channel skipped: {channel.name or channel.youtube} ({exc})"
                 )
                 if _is_youtube_rate_limit_error(exc):
                     _eprint("  hint: rate limit")
@@ -268,9 +293,37 @@ class YouTubeCollector(BaseCollector):
 
     def _transcript_via_ytdlp(self, video_id: str, languages: list[str]) -> str | None:
         target = f"{YOUTUBE_WATCH}{video_id}"
-        # (kept simple; real impl mirrors original with tempfile)
-        # skipping full implementation for brevity
-        return None
+        try:
+            with tempfile.TemporaryDirectory() as tmp_dir:
+                tmp_path = Path(tmp_dir)
+                # We use --write-auto-subs and --skip-download
+                args = [
+                    "--write-auto-subs",
+                    "--write-subs",
+                    "--sub-lang",
+                    ",".join(languages),
+                    "--skip-download",
+                    "--output",
+                    str(tmp_path / "subs"),
+                    target,
+                ]
+                self._run_ytdlp(args, timeout=60)
+                # Look for .vtt or .srt files
+                subs_files = list(tmp_path.glob("subs.*"))
+                if not subs_files:
+                    return None
+                
+                # Pick the first one and strip VTT tags
+                content = subs_files[0].read_text(encoding="utf-8", errors="replace")
+                # Very basic VTT stripping: remove timestamps and headers
+                cleaned = re.sub(r"\d{2}:\d{2}:\d{2}.\d{3} --> \d{2}:\d{2}:\d{2}.\d{3}.*?\n", "", content)
+                cleaned = re.sub(r"<[^>]+>", "", cleaned)
+                cleaned = re.sub(r"WEBVTT.*?\n", "", cleaned)
+                cleaned = re.sub(r"NOTE.*?\n", "", cleaned)
+                return "\n".join(line.strip() for line in cleaned.splitlines() if line.strip())
+        except Exception as exc:
+            _eprint(f"- yt-dlp transcript failed for {video_id}: {exc}")
+            return None
 
     def _fetch_youtube_transcript(
         self,

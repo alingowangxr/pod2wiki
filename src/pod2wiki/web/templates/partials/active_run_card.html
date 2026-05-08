@@ -1,0 +1,31 @@
+{% if active_run %}
+<div id="active-run-card" hx-get="/api/dashboard/active-run" hx-trigger="every 5s" hx-swap="outerHTML">
+    <article>
+        <header>
+            <span class="status-running">●</span> Current Active Run
+        </header>
+        <div class="grid">
+            <div>
+                <strong>Run ID:</strong><br>
+                <code>{{ active_run.id }}</code>
+            </div>
+            <div>
+                <strong>Progress:</strong><br>
+                {{ active_run.total_items - active_run.failed_items - active_run.skipped_items }} / {{ active_run.total_items }}
+            </div>
+        </div>
+        <progress value="{{ active_run.total_items - active_run.failed_items - active_run.skipped_items }}" max="{{ active_run.total_items }}"></progress>
+        <footer>
+            <a href="/runs/{{ active_run.id }}" role="button" class="secondary outline">Live Details</a>
+        </footer>
+    </article>
+</div>
+{% else %}
+<div id="active-run-card" hx-get="/api/dashboard/active-run" hx-trigger="every 10s" hx-swap="outerHTML">
+    <article>
+        <header>System Status</header>
+        <p>No active scan running. <span style="color: green;">Idle.</span></p>
+        <footer><a href="/scan" role="button">Start New Scan</a></footer>
+    </article>
+</div>
+{% endif %}

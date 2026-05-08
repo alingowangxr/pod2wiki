@@ -5,16 +5,17 @@ Extracted from scripts/fetch_podcasts.py::rss_items / collect_rss.
 
 from __future__ import annotations
 
+import asyncio
 import sys
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-import requests
+import httpx
 
 from pod2wiki.collect.base import BaseCollector
 from pod2wiki.models import Config, RSSItem, SourceItem
-from pod2wiki.proxy import requests_proxy
+from pod2wiki.proxy import httpx_proxy
 from pod2wiki.utils import parse_date, strip_html
 
 UA = "pod2wiki/0.1 (+https://github.com/alingowangxr/pod2wiki)"
@@ -49,31 +50,34 @@ class RSSCollector(BaseCollector):
     # --------------------------------------------------------------------- #
     # public API
     # --------------------------------------------------------------------- #
-    def collect(
+    async def collect(
         self,
         days: int,
         history: dict[str, str] | None = None,
         max_items_per_feed: int | None = None,
     ) -> list[SourceItem]:
         history = history or {}
+        
+        # Concurrently fetch all feeds
+        tasks = [
+            self._fetch_feed(feed, days, history, max_items=max_items_per_feed)
+            for feed in self.feeds
+        ]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        
         all_items: list[SourceItem] = []
-        for feed in self.feeds:
-            try:
-                items = self._fetch_feed(
-                    feed,
-                    days,
-                    history,
-                    max_items=max_items_per_feed,
-                )
-                all_items.extend(items)
-            except Exception as exc:
-                _eprint(f"- feed skipped: {feed.get('name') or feed.get('url')} ({exc})")
+        for i, res in enumerate(results):
+            if isinstance(res, Exception):
+                feed = self.feeds[i]
+                _eprint(f"- feed skipped: {feed.get('name') or feed.get('url')} ({res})")
+            else:
+                all_items.extend(res)
         return all_items
 
     # --------------------------------------------------------------------- #
     # fetch logic
     # --------------------------------------------------------------------- #
-    def _fetch_feed(
+    async def _fetch_feed(
         self,
         feed: dict[str, Any],
         days: int,
@@ -85,11 +89,16 @@ class RSSCollector(BaseCollector):
             return []
 
         cutoff = datetime.now(timezone.utc) - timedelta(days=days)
-        response = requests.get(
-            url, timeout=30, headers={"User-Agent": UA}, proxies=requests_proxy()
-        )
-        response.raise_for_status()
-        root = ET.fromstring(response.content)
+        
+        proxy = httpx_proxy()
+        async with httpx.AsyncClient(
+            timeout=30, follow_redirects=True, trust_env=False, proxy=proxy
+        ) as client:
+            response = await client.get(url, headers={"User-Agent": UA})
+            response.raise_for_status()
+            content = response.content
+
+        root = ET.fromstring(content)
 
         ns = {
             "itunes": "http://www.itunes.com/dtds/podcast-1.0.dtd",
