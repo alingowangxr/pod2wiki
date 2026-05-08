@@ -76,6 +76,7 @@ pod2wiki scan --config config/pod2wiki.config.yaml --days 7 --write-insight-log
 
 - [INSTALL-FOR-AI.md](INSTALL-FOR-AI.md): 給 Claude Code、Codex、Cursor 等 AI agent 的安裝協議。
 - [docs/usage-guide.md](docs/usage-guide.md): 完整使用說明，包含安裝、設定、CLI、Web Console、恢復與日常操作。
+- [docs/release-notes.md](docs/release-notes.md): 本次主要版本更新的功能摘要與變更說明。
 - [src/pod2wiki/cli/main.py](src/pod2wiki/cli/main.py): CLI 命令入口。
 - [src/pod2wiki/web/app.py](src/pod2wiki/web/app.py): Web Console 入口。
 
@@ -150,6 +151,7 @@ Run `pod2wiki ui` and open `http://127.0.0.1:8080`:
 
 - [INSTALL-FOR-AI.md](INSTALL-FOR-AI.md): installation protocol for Claude Code, Codex, Cursor, and other AI agents.
 - [docs/usage-guide.md](docs/usage-guide.md): full operating guide covering setup, configuration, CLI, Web Console, recovery, and daily workflows.
+- [docs/release-notes.md](docs/release-notes.md): summary of the major features and repository changes in this release.
 - [src/pod2wiki/cli/main.py](src/pod2wiki/cli/main.py): CLI entry point.
 - [src/pod2wiki/web/app.py](src/pod2wiki/web/app.py): Web Console entry point.
 
