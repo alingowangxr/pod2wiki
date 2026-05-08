@@ -57,4 +57,6 @@ This release moves `pod2wiki` from a script-oriented tool into a more complete o
 
 ## Commit
 
-- `0937ff3` `Add web console, recovery workflows, and usage docs`
+- `2f10f6c` `fix: resolve CLI dry-run regressions and Windows test failures`
+- `a7da382` `feat: major web UI overhaul and improvements`
+
