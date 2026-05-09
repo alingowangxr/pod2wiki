@@ -22,4 +22,4 @@ output-check/
 tmp-*/
 wiki-check/
 docs/guide
-docs/guide.md
+GEMINI.md
