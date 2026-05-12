@@ -2,8 +2,6 @@
 
 [English](#about-pod2wiki) | [中文](#關於-pod2wiki)
 
-[![Latest Release](https://img.shields.io/github/v/release/alingowangxr/pod2wiki?display_name=tag)](https://github.com/alingowangxr/pod2wiki/releases/latest)
-[![Podcast Lint](https://github.com/alingowangxr/pod2wiki/actions/workflows/podcast-lint.yml/badge.svg)](https://github.com/alingowangxr/pod2wiki/actions/workflows/podcast-lint.yml)
 
 > **EN**: Turn high-signal podcasts (YouTube/RSS) and long-form RSS into Chinese summaries plus archived English transcripts, written into your personal LLM wiki.
 >
